@@ -1,4 +1,4 @@
-package org.ligson.jtreesize;
+package org.ligson.jtreesize.filetree;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;

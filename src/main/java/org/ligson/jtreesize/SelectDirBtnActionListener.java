@@ -1,5 +1,9 @@
 package org.ligson.jtreesize;
 
+import lombok.Getter;
+import org.ligson.jtreesize.filetree.FileInfoData;
+import org.ligson.jtreesize.filetree.MyTreeNode;
+
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.event.ActionEvent;
@@ -10,36 +14,34 @@ public class SelectDirBtnActionListener implements ActionListener {
     private final JWin jWin;
     private final JTree jTree;
     private final JFileChooser jFileChooser;
+    @Getter
     private final FileInfoData fileInfoData;
     private File rootDir;
 
-    public SelectDirBtnActionListener(JWin jWin, JTree jTree) {
+    public SelectDirBtnActionListener(JWin jWin, JTree jTree, FileInfoData fileInfoData) {
         jFileChooser = new JFileChooser();
         jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         this.jTree = jTree;
         this.jWin = jWin;
-        fileInfoData = new FileInfoData();
+        this.fileInfoData = fileInfoData;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         jFileChooser.showOpenDialog(jWin);
         rootDir = jFileChooser.getSelectedFile();
-        reload();
+        if (rootDir != null) {
+            reload();
+        }
     }
 
     public void reload() {
-        JOptionPane.showMessageDialog(null,"计算中");
+        jWin.updateStatusBar("正在计算目录大小....");
         fileInfoData.init(rootDir);
-        System.out.println("select:" + rootDir.getAbsolutePath());
+        jWin.updateStatusBar("计算完成");
         DefaultTreeModel defaultTreeModel = (DefaultTreeModel) jTree.getModel();
         defaultTreeModel.setRoot(new MyTreeNode(rootDir));
         defaultTreeModel.reload();
-        JOptionPane.showMessageDialog(null,"计算完成");
-    }
-
-    public FileInfoData getFileInfoData() {
-        return fileInfoData;
     }
 
 

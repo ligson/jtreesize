@@ -6,3 +6,6 @@ local.properties
 .DS_Store
 gradle/
 .idea/
+*.exe
+./dist/
+target/
