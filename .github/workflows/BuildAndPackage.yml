@@ -1,17 +1,15 @@
 name: Build and Package Java Application
 
 on:
-  #push:
-  #  tags:
-  #    - "v*"  # Trigger only on version tags
   push:
     branches:
       - main  # Trigger on push to main branch
+
 jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]  # Run on all three platforms
+        os: [ubuntu-latest, windows-latest, macos-latest]  # Run on all three platforms
     runs-on: ${{ matrix.os }}
 
     steps:
