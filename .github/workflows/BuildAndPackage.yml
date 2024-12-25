@@ -32,17 +32,15 @@ jobs:
       - name: Extract Version from POM
         id: get-version
         run: |
-          if ($env:RUNNER_OS -eq "Windows") {
+          if [ "${{ runner.os }}" == "Windows" ]; then
             # For Windows (PowerShell), use PowerShell syntax
-            $version = (mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-            $version = $version.Trim()
-            echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          } else {
+            pwsh -command '$version = (mvn help:evaluate -Dexpression=project.version -q -DforceStdout); $version = $version.Trim(); echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+          else
             # For Linux and macOS (Bash), use Bash syntax
             version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
             version=$(echo $version | xargs)  # Trim any leading/trailing spaces
             echo "VERSION=$version" >> $GITHUB_ENV
-          }
+          fi
 
       - name: Build with Maven
         run: mvn -Dmaven.test.skip=true clean package
@@ -66,7 +64,7 @@ jobs:
 
       - name: Package Application with jpackage
         run: |
-          if ($env:RUNNER_OS -eq "Windows") {
+          if [ "${{ runner.os }}" == "Windows" ]; then
             jpackage \
               --input dist \
               --name jtreesize \
@@ -77,7 +75,7 @@ jobs:
               --icon conf/treesize.ico \
               --win-dir-chooser \
               --win-shortcut
-          } else {
+          else
             jpackage \
               --input dist \
               --name jtreesize \
@@ -86,7 +84,7 @@ jobs:
               --type dmg \
               --resource-dir conf \
               --icon conf/treesize.ico
-          }
+          fi
 
       - name: Move Output to Dist Folder
         run: |
