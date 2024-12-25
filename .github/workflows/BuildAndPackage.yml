@@ -52,14 +52,9 @@ jobs:
         run: mkdir -p dist
 
       - name: Extract Packaged Archive
-        if: runner.os != 'Windows'
         run: |
-          (cd target) && (tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz) 
+          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/ 
 
-      - name: Extract Packaged Archive (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          (cd target) && (tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz) 
 
       - name: Install WiX Toolset (Windows Only)
         if: runner.os == 'Windows'
@@ -68,37 +63,40 @@ jobs:
       - name: GoToAppDir
         run: cd ${{ env.PKG_NAME }}-${{ env.VERSION }}
 
-      - name: Package Application with jpackage
+      - name: Package Application with jpackage (Windows)
+        if: runner.os == 'Windows'
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            jpackage \
-              --input . \
-              --name ${{ env.PKG_NAME }} \
-              --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
-              --main-class ${{ env.MAIN_CLASS }} \
-              --type exe \
-              --resource-dir conf \
-              --icon conf/treesize.ico \
-              --win-dir-chooser \
-              --win-shortcut  \
-              --app-version ${{ env.VERSION }}
-          else
-            jpackage \
-              --input . \
-              --name ${{ env.PKG_NAME }} \
-              --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
-              --main-class ${{ env.MAIN_CLASS }} \
-              --type dmg \
-              --resource-dir conf \
-              --icon conf/treesize.ico \
-              --app-version ${{ env.VERSION }}
-          fi
+          jpackage \
+            --input dist \
+            --name jtreesize \
+            --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
+            --main-class org.ligson.jtreesize.App \
+            --type exe \
+            --resource-dir conf \
+            --icon conf/treesize.ico \
+            --win-dir-chooser \
+            --win-shortcut \
+            --app-version ${{ env.VERSION }}
+          mv jtreesize.exe jtreesize-${{ env.VERSION }}.exe
+          mv jtreesize-${{ env.VERSION }}.exe dist/
 
-      - name: Move Output to Dist Folder
-        run: mv ${{ env.PKG_NAME }}-* ../../dist/
+      - name: Package Application with jpackage (Non-Windows)
+        if: runner.os != 'Windows'
+        run: |
+          jpackage \
+            --input dist \
+            --name jtreesize \
+            --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
+            --main-class org.ligson.jtreesize.App \
+            --type dmg \
+            --resource-dir conf \
+            --icon conf/treesize.ico \
+            --app-version ${{ env.VERSION }}
+          mv jtreesize.dmg jtreesize-${{ env.VERSION }}.dmg
+          mv jtreesize-${{ env.VERSION }}.dmg dist/
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}
-          path: ../../dist/
+          path: dist/
