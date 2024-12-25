@@ -29,16 +29,19 @@ jobs:
           java-version: "21"
           cache: "maven"
 
-      - name: Extract Version from POM
+      - name: Extract Version from POM (Windows)
+        if: runner.os == 'Windows'
         id: get-version
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            pwsh -command '$version = (mvn help:evaluate -Dexpression=project.version -q -DforceStdout); $version = $version.Trim(); echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
-          else
-            version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-            version=$(echo $version | xargs)  # Trim any leading/trailing spaces
-            echo "VERSION=$version" >> $GITHUB_ENV
-          fi
+          pwsh -command '$version = (mvn help:evaluate -Dexpression=project.version -q -DforceStdout); $version = $version.Trim(); echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+
+      - name: Extract Version from POM (Linux and macOS)
+        if: runner.os != 'Windows'
+        id: get-version
+        run: |
+          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          version=$(echo $version | xargs)  # Trim any leading/trailing spaces
+          echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Build with Maven
         run: mvn -Dmaven.test.skip=true clean package
