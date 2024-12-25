@@ -34,8 +34,8 @@ jobs:
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
             # For Windows (PowerShell), use PowerShell syntax
-            $version = mvn help:evaluate -Dexpression=project.version -q -DforceStdout
-            $version = $version.Trim()  # Trim any leading/trailing spaces
+            version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+            version=$(echo $version | xargs)  # Trim any leading/trailing spaces
             echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           else
             # For Linux and macOS (Bash), use Bash syntax
