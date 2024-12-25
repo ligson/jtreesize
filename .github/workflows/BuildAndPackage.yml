@@ -74,7 +74,6 @@ jobs:
             --win-dir-chooser \
             --win-shortcut \
             --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}.exe ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
@@ -90,7 +89,6 @@ jobs:
             --resource-dir conf \
             --icon conf/treesize.ico \
             --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}.dmg ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
