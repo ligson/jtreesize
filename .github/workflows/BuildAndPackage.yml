@@ -22,7 +22,7 @@ jobs:
           distribution: "temurin"  # Use Eclipse Temurin distribution
           java-version: "21"
 
-      - name: Set up Maven
+      - name: Set up Maven Cache
         uses: actions/setup-java@v3
         with:
           distribution: "temurin"
@@ -32,15 +32,22 @@ jobs:
       - name: Extract Version from POM
         id: get-version
         run: |
-          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "VERSION=$version" >> $GITHUB_ENV
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            # For Windows (PowerShell), use PowerShell syntax
+            $version = mvn help:evaluate -Dexpression=project.version -q -DforceStdout
+            $version = $version.Trim()
+            echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          else
+            # For Linux and macOS (Bash), use Bash syntax
+            version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+            echo "VERSION=$version" >> $GITHUB_ENV
+          fi
 
       - name: Build with Maven
         run: mvn -Dmaven.test.skip=true clean package
 
       - name: Prepare Output Directory
-        run: |
-          mkdir -p dist
+        run: mkdir -p dist
 
       - name: Extract Packaged Archive
         if: runner.os != 'Windows'
@@ -54,21 +61,31 @@ jobs:
 
       - name: Install WiX Toolset (Windows Only)
         if: runner.os == 'Windows'
-        run: |
-          choco install wix --version=3.11.2
+        run: choco install wix --version=3.11.2
 
       - name: Package Application with jpackage
         run: |
-          jpackage \
-            --input dist \
-            --name jtreesize \
-            --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
-            --main-class org.ligson.jtreesize.App \
-            --type $(if [ "${{ matrix.os }}" == "windows-latest" ]; then echo "exe"; else echo "dmg"; fi) \
-            --resource-dir conf \
-            --icon conf/treesize.ico \
-            --win-dir-chooser \
-            --win-shortcut
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            jpackage \
+              --input dist \
+              --name jtreesize \
+              --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
+              --main-class org.ligson.jtreesize.App \
+              --type exe \
+              --resource-dir conf \
+              --icon conf/treesize.ico \
+              --win-dir-chooser \
+              --win-shortcut
+          else
+            jpackage \
+              --input dist \
+              --name jtreesize \
+              --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
+              --main-class org.ligson.jtreesize.App \
+              --type dmg \
+              --resource-dir conf \
+              --icon conf/treesize.ico
+          fi
 
       - name: Move Output to Dist Folder
         run: |
