@@ -60,40 +60,39 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install wix --version=3.11.2
 
-      - name: GoToAppDir
-        run: cd ${{ env.PKG_NAME }}-${{ env.VERSION }}
-
       - name: Package Application with jpackage (Windows)
         if: runner.os == 'Windows'
         run: |
           jpackage \
-            --input dist \
-            --name jtreesize \
-            --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
-            --main-class org.ligson.jtreesize.App \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
             --type exe \
             --resource-dir conf \
             --icon conf/treesize.ico \
             --win-dir-chooser \
             --win-shortcut \
             --app-version ${{ env.VERSION }}
-          mv jtreesize.exe jtreesize-${{ env.VERSION }}.exe
-          mv jtreesize-${{ env.VERSION }}.exe dist/
+          mv ${{ env.PKG_NAME }}.exe ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage (Non-Windows)
         if: runner.os != 'Windows'
         run: |
           jpackage \
-            --input dist \
-            --name jtreesize \
-            --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
-            --main-class org.ligson.jtreesize.App \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
             --type dmg \
             --resource-dir conf \
             --icon conf/treesize.ico \
             --app-version ${{ env.VERSION }}
-          mv jtreesize.dmg jtreesize-${{ env.VERSION }}.dmg
-          mv jtreesize-${{ env.VERSION }}.dmg dist/
+          mv ${{ env.PKG_NAME }}.dmg ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
