@@ -78,7 +78,7 @@ jobs:
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage (Non-Windows)
-        if: runner.os != 'Windows'
+        if: runner.os == 'macOS'
         run: |
           jpackage \
             --input . \
@@ -87,7 +87,7 @@ jobs:
             --main-class ${{ env.MAIN_CLASS }} \
             --type dmg \
             --resource-dir conf \
-            --icon conf/treesize.ico \
+            --icon conf/treesize.icns \
             --app-version ${{ env.VERSION }}
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
