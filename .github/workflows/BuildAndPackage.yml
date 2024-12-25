@@ -51,18 +51,15 @@ jobs:
       - name: Prepare Output Directory
         run: mkdir -p dist
 
-      - name: Go To Target Dir
-        run: cd target
-
       - name: Extract Packaged Archive
         if: runner.os != 'Windows'
         run: |
-          tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz 
+          (cd target) && (tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz) 
 
       - name: Extract Packaged Archive (Windows)
         if: runner.os == 'Windows'
         run: |
-          tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz 
+          (cd target) && (tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz) 
 
       - name: Install WiX Toolset (Windows Only)
         if: runner.os == 'Windows'
