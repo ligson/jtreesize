@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main  # Trigger on push to main branch
-
+env:
+  PKG_NAME: jtreesize
+  MAIN_CLASS: org.ligson.jtreesize.App
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]  # Run on all three platforms
+        os: [ ubuntu-latest, windows-latest, macos-latest ]  # Run on all three platforms
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -55,28 +57,28 @@ jobs:
       - name: Extract Packaged Archive
         if: runner.os != 'Windows'
         run: |
-          tar -zxvf *-jtreesize.tar.gz 
+          tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz 
 
       - name: Extract Packaged Archive (Windows)
         if: runner.os == 'Windows'
         run: |
-          tar -zxvf *-jtreesize.tar.gz 
+          tar -zxvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz 
 
       - name: Install WiX Toolset (Windows Only)
         if: runner.os == 'Windows'
         run: choco install wix --version=3.11.2
 
       - name: GoToAppDir
-        run: cd jtreesize-${{ env.VERSION }}
+        run: cd ${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
             jpackage \
               --input . \
-              --name jtreesize \
-              --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
-              --main-class org.ligson.jtreesize.App \
+              --name ${{ env.PKG_NAME }} \
+              --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+              --main-class ${{ env.MAIN_CLASS }} \
               --type exe \
               --resource-dir conf \
               --icon conf/treesize.ico \
@@ -86,9 +88,9 @@ jobs:
           else
             jpackage \
               --input . \
-              --name jtreesize \
-              --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
-              --main-class org.ligson.jtreesize.App \
+              --name ${{ env.PKG_NAME }} \
+              --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+              --main-class ${{ env.MAIN_CLASS }} \
               --type dmg \
               --resource-dir conf \
               --icon conf/treesize.ico \
@@ -96,10 +98,10 @@ jobs:
           fi
 
       - name: Move Output to Dist Folder
-        run: mv jtreesize-* ../../dist/
+        run: mv ${{ env.PKG_NAME }}-* ../../dist/
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: jtreesize-${{ env.VERSION }}-${{ matrix.os }}
+          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}
           path: ../../dist/
