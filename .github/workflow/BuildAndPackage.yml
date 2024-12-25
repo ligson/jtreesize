@@ -1,0 +1,81 @@
+name: Build and Package Java Application
+
+on:
+  push:
+    tags:
+      - "v*"  # Trigger only on version tags
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]  # Run on all three platforms
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"  # Use Eclipse Temurin distribution
+          java-version: "21"
+
+      - name: Set up Maven
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+          cache: "maven"
+
+      - name: Extract Version from POM
+        id: get-version
+        run: |
+          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Build with Maven
+        run: mvn -Dmaven.test.skip=true clean package
+
+      - name: Prepare Output Directory
+        run: |
+          mkdir -p dist
+
+      - name: Extract Packaged Archive
+        if: runner.os != 'Windows'
+        run: |
+          tar -zxvf target/*-jtreesize.tar.gz -C dist
+
+      - name: Extract Packaged Archive (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          tar -zxvf target/*-jtreesize.tar.gz -C dist
+
+      - name: Install WiX Toolset (Windows Only)
+        if: runner.os == 'Windows'
+        run: |
+          choco install wix --version=3.11.2
+
+      - name: Package Application with jpackage
+        run: |
+          jpackage \
+            --input dist \
+            --name jtreesize \
+            --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
+            --main-class org.ligson.jtreesize.App \
+            --type $(if [ "${{ matrix.os }}" == "windows-latest" ]; then echo "exe"; else echo "dmg"; fi) \
+            --resource-dir conf \
+            --icon conf/treesize.ico \
+            --win-dir-chooser \
+            --win-shortcut
+
+      - name: Move Output to Dist Folder
+        run: |
+          mv jtreesize-* dist/
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: jtreesize-${{ env.VERSION }}-${{ matrix.os }}
+          path: dist/
