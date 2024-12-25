@@ -49,25 +49,31 @@ jobs:
       - name: Prepare Output Directory
         run: mkdir -p dist
 
+      - name: Go To Target Dir
+        run: cd target
+
       - name: Extract Packaged Archive
         if: runner.os != 'Windows'
         run: |
-          tar -zxvf target/*-jtreesize.tar.gz -C dist
+          tar -zxvf *-jtreesize.tar.gz 
 
       - name: Extract Packaged Archive (Windows)
         if: runner.os == 'Windows'
         run: |
-          tar -zxvf target/*-jtreesize.tar.gz -C dist
+          tar -zxvf *-jtreesize.tar.gz 
 
       - name: Install WiX Toolset (Windows Only)
         if: runner.os == 'Windows'
         run: choco install wix --version=3.11.2
 
+      - name: GoToAppDir
+        run: cd jtreesize-${{ env.VERSION }}
+
       - name: Package Application with jpackage
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
             jpackage \
-              --input dist \
+              --input . \
               --name jtreesize \
               --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
               --main-class org.ligson.jtreesize.App \
@@ -75,23 +81,25 @@ jobs:
               --resource-dir conf \
               --icon conf/treesize.ico \
               --win-dir-chooser \
-              --win-shortcut
+              --win-shortcut  \
+              --app-version ${{ env.VERSION }}
           else
             jpackage \
-              --input dist \
+              --input . \
               --name jtreesize \
               --main-jar lib/jtreesize-${{ env.VERSION }}.jar \
               --main-class org.ligson.jtreesize.App \
               --type dmg \
               --resource-dir conf \
-              --icon conf/treesize.ico
+              --icon conf/treesize.ico \
+              --app-version ${{ env.VERSION }}
           fi
 
       - name: Move Output to Dist Folder
-        run: mv jtreesize-* dist/
+        run: mv jtreesize-* ../../dist/
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: jtreesize-${{ env.VERSION }}-${{ matrix.os }}
-          path: dist/
+          path: ../../dist/
