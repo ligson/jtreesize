@@ -109,18 +109,9 @@ jobs:
           tag_name: ${{ env.VERSION }}
           name: ${{ env.VERSION }}
           body_path: CHANGELOG.md
+          files: |
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows Release Asset
-        if: runner.os == 'Windows'
-        uses: softprops/action-gh-release@v1
-        with:
-          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
-
-      - name: Upload macOS Release Asset
-        if: runner.os == 'macOS'
-        uses: softprops/action-gh-release@v1
-        with:
-          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
 
