@@ -1,9 +1,6 @@
 name: Build and Package Java Application
 
-# 添加权限配置
-permissions:
-  contents: write
-  releases: write
+
 
 on:
   push:
