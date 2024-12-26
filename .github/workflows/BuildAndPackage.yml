@@ -94,7 +94,7 @@ jobs:
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}
           path: dist/
