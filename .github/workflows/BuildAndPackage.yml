@@ -5,6 +5,11 @@ on:
     branches:
       - main  # Trigger on push to main branch
 
+permissions:
+  contents: write
+  packages: write
+  actions: write
+
 env:
   PKG_NAME: jtreesize
   MAIN_CLASS: org.ligson.jtreesize.App
@@ -96,22 +101,23 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION }}
-          release_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
           body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows Release Asset
+        if: matrix.os == 'Windows'
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}.exe
-          asset_name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
+          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}.exe
+
+      - name: Upload macOS Release Asset
+        if: matrix.os == 'macOS'
+        uses: softprops/action-gh-release@v1
+        with:
+          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}.dmg
+
