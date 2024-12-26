@@ -104,10 +104,11 @@ jobs:
             --type app-image \
             --resource-dir conf \
             --icon conf/treesize.png \
-            --app-version ${{ env.VERSION }}
-          
+            --app-version ${{ env.VERSION }} \
+            --dest ../../app-image
+
           # 压缩 app-image 目录为 tar.gz
-          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz ${{ env.PKG_NAME }}
+          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
 
           # 移动压缩包到 dist 目录
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz ../../dist/
