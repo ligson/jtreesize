@@ -49,7 +49,7 @@ public class SelectDirBtnActionListener implements ActionListener {
         applicationContext.publishEvent(statusBarChangeEvent1);
 
         DefaultTreeModel defaultTreeModel = (DefaultTreeModel) fileTree.getModel();
-        defaultTreeModel.setRoot(new FileTreeNode(rootDir));
+        defaultTreeModel.setRoot(new FileTreeNode(rootDir,fileInfoData));
         defaultTreeModel.reload();
     }
 
