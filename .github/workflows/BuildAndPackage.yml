@@ -3,7 +3,7 @@ name: Build and Package Java Application
 on:
   push:
     branches:
-      - main  # Trigger on push to main branch
+      - main  # 触发条件：推送到 main 分支
 
 permissions:
   contents: write
@@ -18,7 +18,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]  # Run on all three platforms
+        os: [ ubuntu-latest, windows-latest, macos-latest ]  # 在三个平台上运行
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -28,7 +28,7 @@ jobs:
       - name: Set up JDK 21 and Maven Cache
         uses: actions/setup-java@v3
         with:
-          distribution: "temurin"  # Use Eclipse Temurin distribution
+          distribution: "temurin"  # 使用 Eclipse Temurin 发行版
           java-version: "21"
           cache: "maven"
 
@@ -44,7 +44,7 @@ jobs:
         id: get-version-linux-macos
         run: |
           version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          version=$(echo $version | xargs)  # Trim any leading/trailing spaces
+          version=$(echo $version | xargs)  # 去除前后空格
           echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Build with Maven
@@ -55,7 +55,7 @@ jobs:
 
       - name: Extract Packaged Archive
         run: |
-          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/ 
+          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/
 
       - name: Install WiX
         if: runner.os == 'Windows'
@@ -75,10 +75,10 @@ jobs:
             --win-dir-chooser `
             --win-shortcut `
             --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
-      - name: Package Application with jpackage (Non-Windows)
+      - name: Package Application with jpackage (macOS)
         if: runner.os == 'macOS'
         run: |
           jpackage \
@@ -90,8 +90,11 @@ jobs:
             --resource-dir conf \
             --icon conf/treesize.icns \
             --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: List dist directory
+        run: ls -la dist/
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
@@ -110,14 +113,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows Release Asset
-        if: matrix.os == 'Windows'
+        if: runner.os == 'Windows'
         uses: softprops/action-gh-release@v1
         with:
-          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}.exe
+          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
 
       - name: Upload macOS Release Asset
-        if: matrix.os == 'macOS'
+        if: runner.os == 'macOS'
         uses: softprops/action-gh-release@v1
         with:
-          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}.dmg
+          assets: dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
 
