@@ -93,6 +93,21 @@ jobs:
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
+      - name: Package Application with jpackage (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          jpackage \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
+            --type tar.gz \
+            --resource-dir conf \
+            --icon conf/treesize.png \
+            --app-version ${{ env.VERSION }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.tar.gz ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
       - name: List dist directory (Unix)
         if: runner.os != 'Windows'
         run: ls -la dist/
@@ -117,6 +132,7 @@ jobs:
           files: |
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
