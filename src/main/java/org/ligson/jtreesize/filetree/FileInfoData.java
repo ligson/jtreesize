@@ -1,7 +1,8 @@
 package org.ligson.jtreesize.filetree;
 
 import org.ligson.jtreesize.SizeTask;
-import org.ligson.jtreesize.core.event.EventPublisher;
+import org.ligson.jtreesize.core.ApplicationContext;
+import org.ligson.jtreesize.core.annotation.Component;
 import org.ligson.jtreesize.event.FileSizeRefreshEvent;
 import org.ligson.jtreesize.event.StatusBarChangeEvent;
 
@@ -12,20 +13,21 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
+@Component
 public class FileInfoData {
     public Map<File, Long> fileSizeMap = new ConcurrentHashMap<>();
 
-    private EventPublisher eventPublisher;
+    private final ApplicationContext applicationContext;
 
-    public FileInfoData(EventPublisher eventPublisher) {
-        this.eventPublisher = eventPublisher;
+    public FileInfoData(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
     public void init(File dir) {
         fileSizeMap.clear();
         calcDirSize(dir);
         FileSizeRefreshEvent fileSizeRefreshEvent = new FileSizeRefreshEvent(this, List.of(dir));
-        eventPublisher.publishEvent(fileSizeRefreshEvent);
+        applicationContext.publishEvent(fileSizeRefreshEvent);
     }
 
     public static List<File> getAllParentDirectories(File file) {
@@ -40,12 +42,12 @@ public class FileInfoData {
 
     public void refresh(File file) {
         StatusBarChangeEvent statusBarChangeEvent1 = new StatusBarChangeEvent(this, "正在计算目录大小....");
-        eventPublisher.publishEvent(statusBarChangeEvent1);
+        applicationContext.publishEvent(statusBarChangeEvent1);
         calcDirSize(file);
         FileSizeRefreshEvent fileSizeRefreshEvent = new FileSizeRefreshEvent(this, getAllParentDirectories(file));
-        eventPublisher.publishEvent(fileSizeRefreshEvent);
+        applicationContext.publishEvent(fileSizeRefreshEvent);
         StatusBarChangeEvent statusBarChangeEvent2 = new StatusBarChangeEvent(this, "计算大小完成");
-        eventPublisher.publishEvent(statusBarChangeEvent2);
+        applicationContext.publishEvent(statusBarChangeEvent2);
     }
 
     public long getFileSize(File file) {

@@ -1,16 +1,15 @@
 package org.ligson.jtreesize;
 
 
-import javax.swing.*;
+import org.ligson.jtreesize.core.SpringBootApplicationRunner;
+import org.ligson.jtreesize.core.annotation.SpringBootApplication;
 
+@SpringBootApplication(scanBasePackages = {"org.ligson.jtreesize"})
 public class App {
 
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JWin jWin = new JWin();
-            jWin.setVisible(true);
-        });
+    public static void main(String[] args) throws Exception {
+        SpringBootApplicationRunner.run(App.class, args);
 
     }
 }

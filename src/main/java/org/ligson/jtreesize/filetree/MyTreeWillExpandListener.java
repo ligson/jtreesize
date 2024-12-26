@@ -1,26 +1,28 @@
 package org.ligson.jtreesize.filetree;
 
-import javax.swing.*;
+import org.ligson.jtreesize.core.ApplicationContext;
+import org.ligson.jtreesize.core.annotation.Component;
+import org.ligson.jtreesize.filetree.event.TreeWillExpandEvent;
+
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
-import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.ExpandVetoException;
 
+@Component
 public class MyTreeWillExpandListener implements TreeWillExpandListener {
-    private final JTree jTree;
-    private final FileInfoData fileInfoData;
 
-    public MyTreeWillExpandListener(JTree jTree, FileInfoData fileInfoData) {
-        this.jTree = jTree;
-        this.fileInfoData = fileInfoData;
+
+    private final ApplicationContext applicationContext;
+
+    public MyTreeWillExpandListener(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
     @Override
     public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
         MyTreeNode myTreeNode = (MyTreeNode) event.getPath().getLastPathComponent();
-        System.out.println(event.getPath() + "--treeWillExpand");
-        DefaultTreeModel defaultTreeModel = (DefaultTreeModel) jTree.getModel();
-        myTreeNode.loadChild(defaultTreeModel,fileInfoData);
+        TreeWillExpandEvent treeWillExpandEvent = new TreeWillExpandEvent(this, myTreeNode);
+        applicationContext.publishEvent(treeWillExpandEvent);
     }
 
     @Override

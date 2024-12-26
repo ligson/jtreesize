@@ -1,27 +1,32 @@
 package org.ligson.jtreesize.filetree;
 
 import lombok.Getter;
-import org.ligson.jtreesize.core.event.EventPublisher;
+import org.ligson.jtreesize.core.annotation.Component;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.io.File;
 
+@Component
 public class FileTree extends JTree {
 
     @Getter
     private DefaultTreeModel treeModel;
 
-    public FileTree(FileInfoData fileInfoData, EventPublisher eventPublisher) {
+    public FileTree(
+            MyTreeNodeListener myTreeNodeListener,
+            MyTreeCellRenderer myTreeCellRenderer,
+            MyTreeWillExpandListener myTreeWillExpandListener,
+            JTreeMouseListener jTreeMouseListener) {
+
         treeModel = new DefaultTreeModel(null);
-        MyTreeNodeListener myTreeNodeListener = new MyTreeNodeListener();
         treeModel.addTreeModelListener(myTreeNodeListener);
 
         setModel(treeModel);
-        setCellRenderer(new MyTreeCellRenderer(fileInfoData));
-        addTreeWillExpandListener(new MyTreeWillExpandListener(this, fileInfoData));
-        addMouseListener(new JTreeMouseListener(eventPublisher, this));
+        setCellRenderer(myTreeCellRenderer);
+        addTreeWillExpandListener(myTreeWillExpandListener);
+        addMouseListener(jTreeMouseListener);
     }
 
 

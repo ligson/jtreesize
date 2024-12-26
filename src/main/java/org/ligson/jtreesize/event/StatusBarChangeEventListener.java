@@ -1,18 +1,19 @@
 package org.ligson.jtreesize.event;
 
+import org.ligson.jtreesize.JWin;
+import org.ligson.jtreesize.core.annotation.Component;
 import org.ligson.jtreesize.core.event.EventListener;
 
-import javax.swing.*;
-
+@Component
 public class StatusBarChangeEventListener implements EventListener<StatusBarChangeEvent> {
-    private final JLabel statusBar;
+    private final JWin jWin;
 
-    public StatusBarChangeEventListener(JLabel statusBar) {
-        this.statusBar = statusBar;
+    public StatusBarChangeEventListener(JWin jWin) {
+        this.jWin = jWin;
     }
 
     @Override
     public void onEvent(StatusBarChangeEvent event) {
-        statusBar.setText(event.getMessage());
+        jWin.updateStatusBar(event.getMessage());
     }
 }

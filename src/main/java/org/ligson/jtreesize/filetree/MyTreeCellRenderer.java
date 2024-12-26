@@ -6,6 +6,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
 import java.io.File;
 
+@org.ligson.jtreesize.core.annotation.Component
 public class MyTreeCellRenderer extends DefaultTreeCellRenderer {
     private final FileInfoData fileInfoData;
 

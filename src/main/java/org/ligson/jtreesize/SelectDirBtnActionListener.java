@@ -1,7 +1,11 @@
 package org.ligson.jtreesize;
 
 import lombok.Getter;
+import org.ligson.jtreesize.core.ApplicationContext;
+import org.ligson.jtreesize.core.annotation.Component;
+import org.ligson.jtreesize.event.StatusBarChangeEvent;
 import org.ligson.jtreesize.filetree.FileInfoData;
+import org.ligson.jtreesize.filetree.FileTree;
 import org.ligson.jtreesize.filetree.MyTreeNode;
 
 import javax.swing.*;
@@ -10,25 +14,27 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
+@Component
 public class SelectDirBtnActionListener implements ActionListener {
-    private final JWin jWin;
-    private final JTree jTree;
+    private final FileTree fileTree;
     private final JFileChooser jFileChooser;
     @Getter
     private final FileInfoData fileInfoData;
     private File rootDir;
 
-    public SelectDirBtnActionListener(JWin jWin, JTree jTree, FileInfoData fileInfoData) {
+    private ApplicationContext applicationContext;
+
+    public SelectDirBtnActionListener(FileTree fileTree, FileInfoData fileInfoData, ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
         jFileChooser = new JFileChooser();
         jFileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        this.jTree = jTree;
-        this.jWin = jWin;
+        this.fileTree = fileTree;
         this.fileInfoData = fileInfoData;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        jFileChooser.showOpenDialog(jWin);
+        jFileChooser.showOpenDialog(null);
         rootDir = jFileChooser.getSelectedFile();
         if (rootDir != null) {
             reload();
@@ -36,10 +42,13 @@ public class SelectDirBtnActionListener implements ActionListener {
     }
 
     public void reload() {
-        jWin.updateStatusBar("正在计算目录大小....");
+        StatusBarChangeEvent statusBarChangeEvent = new StatusBarChangeEvent(this, "正在计算目录大小....");
+        applicationContext.publishEvent(statusBarChangeEvent);
         fileInfoData.init(rootDir);
-        jWin.updateStatusBar("计算完成");
-        DefaultTreeModel defaultTreeModel = (DefaultTreeModel) jTree.getModel();
+        StatusBarChangeEvent statusBarChangeEvent1 = new StatusBarChangeEvent(this, "计算完成");
+        applicationContext.publishEvent(statusBarChangeEvent1);
+
+        DefaultTreeModel defaultTreeModel = (DefaultTreeModel) fileTree.getModel();
         defaultTreeModel.setRoot(new MyTreeNode(rootDir));
         defaultTreeModel.reload();
     }

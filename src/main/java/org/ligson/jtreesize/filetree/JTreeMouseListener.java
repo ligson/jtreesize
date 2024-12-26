@@ -1,18 +1,21 @@
 package org.ligson.jtreesize.filetree;
 
-import org.ligson.jtreesize.core.event.EventPublisher;
+import org.ligson.jtreesize.core.annotation.Component;
 
 import javax.swing.*;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+@Component
 public class JTreeMouseListener extends MouseAdapter {
 
     private final TreeNodeContext treeNodeContext;
 
-    public JTreeMouseListener(EventPublisher eventPublisher, FileTree fileTree) {
-        treeNodeContext = new TreeNodeContext(eventPublisher, fileTree);
+
+    public JTreeMouseListener(
+            TreeNodeContext treeNodeContext) {
+        this.treeNodeContext = treeNodeContext;
     }
 
 
