@@ -24,6 +24,8 @@ public class FileInfoData {
     }
 
     public void init(File dir) {
+        StatusBarChangeEvent statusBarChangeEvent = new StatusBarChangeEvent(this, "正在计算目录大小....");
+        applicationContext.publishEvent(statusBarChangeEvent);
         fileSizeMap.clear();
         calcDirSize(dir);
         FileSizeRefreshEvent fileSizeRefreshEvent = new FileSizeRefreshEvent(this, List.of(dir));
@@ -55,6 +57,10 @@ public class FileInfoData {
 
     public long getFileSize(File file) {
         return fileSizeMap.getOrDefault(file, 0L);
+    }
+
+    public boolean exist(File file) {
+        return fileSizeMap.containsKey(file);
     }
 
     public String getFileSizeHuman(File file) {

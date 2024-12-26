@@ -32,6 +32,11 @@ public class FileTree extends JTree {
         FileTreeNode nodeToRemove = findNode(root, file);
         if (nodeToRemove != null) {
             fileTreeModel.removeNodeFromParent(nodeToRemove);
+            if (nodeToRemove.getParent() != null) {
+                fileTreeModel.reload(nodeToRemove.getParent());
+            } else {
+                fileTreeModel.reload();
+            }
         }
     }
 
@@ -39,14 +44,12 @@ public class FileTree extends JTree {
         if (root.getFile().equals(file)) {
             return root;
         }
-        for (int i = 0; i < root.getChildCount(); i++) {
-            FileTreeNode child = (FileTreeNode) root.getChildAt(i);
-            FileTreeNode result = findNode(child, file);
-            if (result != null) {
-                return result;
-            }
+
+        if (root.getFileInfoData().exist(file)) {
+            return new FileTreeNode(file, root.getFileInfoData());
+        } else {
+            return null;
         }
-        return null;
     }
 
     public void updateNodeText(File file) {
@@ -55,6 +58,7 @@ public class FileTree extends JTree {
         if (nodeToUpdate != null) {
             nodeToUpdate.setFile(file);
             fileTreeModel.nodeChanged(nodeToUpdate);
+            fileTreeModel.reload();
             repaint();
         }
     }

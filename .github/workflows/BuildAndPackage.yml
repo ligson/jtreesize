@@ -66,7 +66,7 @@ jobs:
         run: |
           jpackage `
             --input . `
-            --name ${{ env.PKG_NAME }} \
+            --name ${{ env.PKG_NAME }} `
             --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar `
             --main-class ${{ env.MAIN_CLASS }} `
             --type exe `

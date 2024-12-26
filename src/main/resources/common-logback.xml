@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- 注册自定义转换器 -->
+    <conversionRule conversionWord="levelColor"
+                    class="org.ligson.jtreesize.core.log.LevelColorConverter"/>
+    <conversionRule conversionWord="threadColor"
+                    class="org.ligson.jtreesize.core.log.ThreadColorConverter"/>
+    <conversionRule conversionWord="loggerColor"
+                    class="org.ligson.jtreesize.core.log.LoggerColorConverter"/>
+    <conversionRule conversionWord="lineColor"
+                    class="org.ligson.jtreesize.core.log.LineNumberColorConverter"/>
+    <conversionRule conversionWord="separatorColor"
+                    class="org.ligson.jtreesize.core.log.SeparatorColorConverter"/>
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss} 【%levelColor】 - %threadColor - [%loggerColor:%lineColor] %separatorColor %msg%n"/>
+
+</configuration>

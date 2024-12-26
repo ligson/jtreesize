@@ -15,23 +15,23 @@ public class FileTreeNode implements MutableTreeNode {
     @Getter
     private long fileSize;
     private final List<FileTreeNode> childNodes = new ArrayList<>();
+    @Getter
     private final FileInfoData fileInfoData;
 
     public FileTreeNode(File file, FileInfoData fileInfoData) {
         this.file = file;
         this.fileInfoData = fileInfoData;
         this.fileSize = fileInfoData.getFileSize(file);
-        loadChild();
     }
 
     @Override
     public TreeNode getChildAt(int childIndex) {
-        return childNodes.get(childIndex);
+        return getChildNodes().get(childIndex);
     }
 
     @Override
     public int getChildCount() {
-        return childNodes.size();
+        return getChildNodes().size();
     }
 
     @Override
@@ -45,7 +45,7 @@ public class FileTreeNode implements MutableTreeNode {
 
     @Override
     public int getIndex(TreeNode node) {
-        return childNodes.indexOf((FileTreeNode) node);
+        return getChildNodes().indexOf((FileTreeNode) node);
     }
 
     @Override
@@ -60,11 +60,12 @@ public class FileTreeNode implements MutableTreeNode {
 
     @Override
     public Enumeration<? extends TreeNode> children() {
-        return Collections.enumeration(childNodes);
+        return Collections.enumeration(getChildNodes());
     }
 
     private void loadChild() {
         if (!childLoaded) {
+            childNodes.clear();
             File[] files = file.listFiles();
             if (files != null) {
                 Arrays.sort(files, (o1, o2) -> Long.compare(fileInfoData.getFileSize(o2), fileInfoData.getFileSize(o1)));
@@ -87,21 +88,25 @@ public class FileTreeNode implements MutableTreeNode {
     public void setFile(File file) {
         this.file = file;
         this.fileSize = fileInfoData.getFileSize(file);
+        childLoaded = false;
+        loadChild();
     }
 
     @Override
     public void insert(MutableTreeNode child, int index) {
-        childNodes.set(index, (FileTreeNode) child);
+        getChildNodes().set(index, (FileTreeNode) child);
     }
 
     @Override
     public void remove(int index) {
-        childNodes.remove(index);
+        if (index >= 0) {
+            getChildNodes().remove(index);
+        }
     }
 
     @Override
     public void remove(MutableTreeNode node) {
-        childNodes.remove((FileTreeNode) node);
+        getChildNodes().remove((FileTreeNode) node);
     }
 
     @Override
@@ -120,5 +125,10 @@ public class FileTreeNode implements MutableTreeNode {
     @Override
     public void setParent(MutableTreeNode newParent) {
         throw new UnsupportedOperationException();
+    }
+
+    public List<FileTreeNode> getChildNodes() {
+        loadChild();
+        return childNodes;
     }
 }

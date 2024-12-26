@@ -1,5 +1,6 @@
 package org.ligson.jtreesize.filetree.event;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.ligson.jtreesize.core.ApplicationContext;
 import org.ligson.jtreesize.core.annotation.Component;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 @Component
+@Slf4j
 public class TreeRemoveSelectNodeEventListener implements EventListener<TreeRemoveSelectNodeEvent> {
     private final FileTree fileTree;
     private final ApplicationContext applicationContext;
@@ -38,14 +40,17 @@ public class TreeRemoveSelectNodeEventListener implements EventListener<TreeRemo
                 for (TreePath path : paths) {
                     FileTreeNode node = (FileTreeNode) path.getLastPathComponent();
                     File deleteFile = node.getFile();
+                    log.debug("开始删除文件:{}", deleteFile.getAbsolutePath());
                     boolean re = deleteFile(deleteFile);
                     if (re) {
                         fileTree.removeNode(deleteFile);
                         ReloadDirEvent reloadDirEvent = new ReloadDirEvent(this, deleteFile.getParent());
                         applicationContext.publishEvent(reloadDirEvent);
                         successCount++;
+                        log.debug("删除成功:{}", deleteFile.getAbsolutePath());
                     } else {
                         deleteFailFiles.add(deleteFile);
+                        log.error("删除失败:{}", deleteFile.getAbsolutePath());
                     }
                 }
                 if (successCount == paths.length) {
@@ -71,7 +76,8 @@ public class TreeRemoveSelectNodeEventListener implements EventListener<TreeRemo
             applicationContext.publishEvent(statusBarChangeEvent2);
             return true;
         } catch (IOException e) {
-            StatusBarChangeEvent statusBarChangeEvent2 = new StatusBarChangeEvent(this, "删除" + file.getAbsolutePath() + "失败");
+            log.error("删除文件失败:{}", file.getAbsolutePath(), e);
+            StatusBarChangeEvent statusBarChangeEvent2 = new StatusBarChangeEvent(this, "删除" + file.getAbsolutePath() + "失败:" + e.getMessage());
             applicationContext.publishEvent(statusBarChangeEvent2);
             return false;
         }
