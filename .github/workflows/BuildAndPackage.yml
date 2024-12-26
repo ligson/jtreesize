@@ -64,16 +64,16 @@ jobs:
       - name: Package Application with jpackage (Windows)
         if: runner.os == 'Windows'
         run: |
-          jpackage \
-            --input . \
+          jpackage `
+            --input . `
             --name ${{ env.PKG_NAME }} \
-            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
-            --main-class ${{ env.MAIN_CLASS }} \
-            --type exe \
-            --resource-dir conf \
-            --icon conf/treesize.ico \
-            --win-dir-chooser \
-            --win-shortcut \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar `
+            --main-class ${{ env.MAIN_CLASS }} `
+            --type exe `
+            --resource-dir conf `
+            --icon conf/treesize.ico `
+            --win-dir-chooser `
+            --win-shortcut `
             --app-version ${{ env.VERSION }}
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}

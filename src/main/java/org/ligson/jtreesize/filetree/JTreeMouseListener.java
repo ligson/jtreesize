@@ -27,13 +27,13 @@ public class JTreeMouseListener extends MouseAdapter {
             if (path == null)
                 return;
 
-            MyTreeNode myTreeNode = (MyTreeNode) path
+            FileTreeNode fileTreeNode = (FileTreeNode) path
                     .getLastPathComponent();
 
-            System.out.println("选中：" + myTreeNode.getFile().getAbsolutePath());
+            System.out.println("选中：" + fileTreeNode.getFile().getAbsolutePath());
 
 
-            treeNodeContext.showMenu(e.getX(), e.getY(), myTreeNode.getFile());
+            treeNodeContext.showMenu(e.getX(), e.getY(), fileTreeNode.getFile());
         }
     }
 }

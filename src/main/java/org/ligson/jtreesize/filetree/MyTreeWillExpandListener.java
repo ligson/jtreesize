@@ -20,8 +20,8 @@ public class MyTreeWillExpandListener implements TreeWillExpandListener {
 
     @Override
     public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
-        MyTreeNode myTreeNode = (MyTreeNode) event.getPath().getLastPathComponent();
-        TreeWillExpandEvent treeWillExpandEvent = new TreeWillExpandEvent(this, myTreeNode);
+        FileTreeNode fileTreeNode = (FileTreeNode) event.getPath().getLastPathComponent();
+        TreeWillExpandEvent treeWillExpandEvent = new TreeWillExpandEvent(this, fileTreeNode);
         applicationContext.publishEvent(treeWillExpandEvent);
     }
 

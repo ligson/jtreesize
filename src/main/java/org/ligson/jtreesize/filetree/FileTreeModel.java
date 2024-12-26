@@ -8,10 +8,10 @@ import javax.swing.tree.DefaultTreeModel;
 @Getter
 @Setter
 public class FileTreeModel extends DefaultTreeModel {
-    private MyTreeNode myTreeNode;
+    private FileTreeNode fileTreeNode;
 
-    public FileTreeModel(MyTreeNode root) {
+    public FileTreeModel(FileTreeNode root) {
         super(root);
-        this.myTreeNode = root;
+        this.fileTreeNode = root;
     }
 }

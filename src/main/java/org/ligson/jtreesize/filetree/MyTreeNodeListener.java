@@ -12,7 +12,7 @@ public class MyTreeNodeListener implements TreeModelListener {
     public void treeNodesChanged(TreeModelEvent e) {
         TreePath treePath = e.getTreePath();
         if (treePath != null) {
-            MyTreeNode myTreeNode = (MyTreeNode) treePath.getLastPathComponent();
+            FileTreeNode fileTreeNode = (FileTreeNode) treePath.getLastPathComponent();
 
 
         }

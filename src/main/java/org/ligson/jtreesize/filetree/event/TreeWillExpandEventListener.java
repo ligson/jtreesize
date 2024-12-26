@@ -4,7 +4,7 @@ import org.ligson.jtreesize.core.annotation.Component;
 import org.ligson.jtreesize.core.event.EventListener;
 import org.ligson.jtreesize.filetree.FileInfoData;
 import org.ligson.jtreesize.filetree.FileTree;
-import org.ligson.jtreesize.filetree.MyTreeNode;
+import org.ligson.jtreesize.filetree.FileTreeNode;
 
 import javax.swing.tree.DefaultTreeModel;
 
@@ -20,8 +20,8 @@ public class TreeWillExpandEventListener implements EventListener<TreeWillExpand
 
     @Override
     public void onEvent(TreeWillExpandEvent event) {
-        MyTreeNode myTreeNode = event.getMyTreeNode();
+        FileTreeNode fileTreeNode = event.getFileTreeNode();
         DefaultTreeModel defaultTreeModel = (DefaultTreeModel) fileTree.getModel();
-        myTreeNode.loadChild(defaultTreeModel, fileInfoData);
+        fileTreeNode.loadChild(defaultTreeModel, fileInfoData);
     }
 }

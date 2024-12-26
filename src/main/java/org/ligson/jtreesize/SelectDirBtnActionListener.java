@@ -6,7 +6,7 @@ import org.ligson.jtreesize.core.annotation.Component;
 import org.ligson.jtreesize.event.StatusBarChangeEvent;
 import org.ligson.jtreesize.filetree.FileInfoData;
 import org.ligson.jtreesize.filetree.FileTree;
-import org.ligson.jtreesize.filetree.MyTreeNode;
+import org.ligson.jtreesize.filetree.FileTreeNode;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultTreeModel;
@@ -49,7 +49,7 @@ public class SelectDirBtnActionListener implements ActionListener {
         applicationContext.publishEvent(statusBarChangeEvent1);
 
         DefaultTreeModel defaultTreeModel = (DefaultTreeModel) fileTree.getModel();
-        defaultTreeModel.setRoot(new MyTreeNode(rootDir));
+        defaultTreeModel.setRoot(new FileTreeNode(rootDir));
         defaultTreeModel.reload();
     }
 

@@ -5,24 +5,23 @@ import org.ligson.jtreesize.core.annotation.Component;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import java.io.File;
 
 @Component
 public class FileTree extends JTree {
 
     @Getter
-    private DefaultTreeModel treeModel;
+    private FileTreeModel fileTreeModel;
 
     public FileTree(
             MyTreeNodeListener myTreeNodeListener,
             MyTreeCellRenderer myTreeCellRenderer,
             MyTreeWillExpandListener myTreeWillExpandListener,
             JTreeMouseListener jTreeMouseListener) {
-        treeModel = new DefaultTreeModel(null);
-        treeModel.addTreeModelListener(myTreeNodeListener);
+        fileTreeModel = new FileTreeModel(null);
+        fileTreeModel.addTreeModelListener(myTreeNodeListener);
 
-        setModel(treeModel);
+        setModel(fileTreeModel);
         setCellRenderer(myTreeCellRenderer);
         addTreeWillExpandListener(myTreeWillExpandListener);
         addMouseListener(jTreeMouseListener);
@@ -30,10 +29,10 @@ public class FileTree extends JTree {
 
 
     public void removeNode(File file) {
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) fileTreeModel.getRoot();
         DefaultMutableTreeNode nodeToRemove = findNode(root, file);
         if (nodeToRemove != null) {
-            treeModel.removeNodeFromParent(nodeToRemove);
+            fileTreeModel.removeNodeFromParent(nodeToRemove);
         }
     }
 
@@ -52,11 +51,11 @@ public class FileTree extends JTree {
     }
 
     public void updateNodeText(File file) {
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) fileTreeModel.getRoot();
         DefaultMutableTreeNode nodeToUpdate = findNode(root, file);
         if (nodeToUpdate != null) {
             nodeToUpdate.setUserObject(file);
-            treeModel.nodeChanged(nodeToUpdate);
+            fileTreeModel.nodeChanged(nodeToUpdate);
         }
     }
 

@@ -7,7 +7,7 @@ import org.ligson.jtreesize.core.event.EventListener;
 import org.ligson.jtreesize.event.ReloadDirEvent;
 import org.ligson.jtreesize.event.StatusBarChangeEvent;
 import org.ligson.jtreesize.filetree.FileTree;
-import org.ligson.jtreesize.filetree.MyTreeNode;
+import org.ligson.jtreesize.filetree.FileTreeNode;
 
 import javax.swing.*;
 import javax.swing.tree.TreePath;
@@ -36,7 +36,7 @@ public class TreeRemoveSelectNodeEventListener implements EventListener<TreeRemo
                 int successCount = 0;
                 java.util.List<File> deleteFailFiles = new ArrayList<>();
                 for (TreePath path : paths) {
-                    MyTreeNode node = (MyTreeNode) path.getLastPathComponent();
+                    FileTreeNode node = (FileTreeNode) path.getLastPathComponent();
                     File deleteFile = node.getFile();
                     boolean re = deleteFile(deleteFile);
                     if (re) {
