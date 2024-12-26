@@ -10,3 +10,4 @@ gradle/
 dist/
 target/
 .vscode/
+logs/
