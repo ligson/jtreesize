@@ -93,8 +93,13 @@ jobs:
           mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
-      - name: List dist directory
+      - name: List dist directory (Unix)
+        if: runner.os != 'Windows'
         run: ls -la dist/
+
+      - name: List dist directory (Windows)
+        if: runner.os == 'Windows'
+        run: Get-ChildItem dist
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
