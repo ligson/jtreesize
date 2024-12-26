@@ -19,7 +19,6 @@ public class FileTree extends JTree {
             MyTreeCellRenderer myTreeCellRenderer,
             MyTreeWillExpandListener myTreeWillExpandListener,
             JTreeMouseListener jTreeMouseListener) {
-
         treeModel = new DefaultTreeModel(null);
         treeModel.addTreeModelListener(myTreeNodeListener);
 

@@ -35,7 +35,8 @@ jobs:
         if: runner.os == 'Windows'
         id: get-version-windows
         run: |
-          pwsh -command '$version = (mvn help:evaluate -Dexpression=project.version -q -DforceStdout); $version = $version.Trim(); echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+          $version = (mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Extract Version from POM (Linux and macOS)
         if: runner.os != 'Windows'

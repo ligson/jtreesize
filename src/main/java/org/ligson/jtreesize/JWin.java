@@ -11,7 +11,7 @@ import java.util.Objects;
 @Component(lazy = false)
 public class JWin extends JFrame {
 
-    private JLabel statusBar;
+    private final JLabel statusBar;
 
 
     public JWin(SelectDirBtnActionListener selectDirBtnActionListener, FileTree fileTree) {
