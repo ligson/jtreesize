@@ -94,7 +94,29 @@ jobs:
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}
           path: dist/
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}
+          release_name: ${{ env.VERSION }}
+          body_path: changelog.txt
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/
+          asset_name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}
+          asset_content_type: application/zip
