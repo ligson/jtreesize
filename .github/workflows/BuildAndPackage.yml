@@ -57,9 +57,9 @@ jobs:
           tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/ 
 
 
-      - name: Install WiX Toolset (Windows Only)
+      - name: Install WiX
         if: runner.os == 'Windows'
-        run: choco install wix --version=3.11.2
+        run: dotnet tool install --global wix
 
       - name: Package Application with jpackage (Windows)
         if: runner.os == 'Windows'
