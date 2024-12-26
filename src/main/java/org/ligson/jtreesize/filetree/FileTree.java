@@ -4,7 +4,6 @@ import lombok.Getter;
 import org.ligson.jtreesize.core.annotation.Component;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.File;
 
 @Component
@@ -29,20 +28,20 @@ public class FileTree extends JTree {
 
 
     public void removeNode(File file) {
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) fileTreeModel.getRoot();
-        DefaultMutableTreeNode nodeToRemove = findNode(root, file);
+        FileTreeNode root = (FileTreeNode) fileTreeModel.getRoot();
+        FileTreeNode nodeToRemove = findNode(root, file);
         if (nodeToRemove != null) {
             fileTreeModel.removeNodeFromParent(nodeToRemove);
         }
     }
 
-    private DefaultMutableTreeNode findNode(DefaultMutableTreeNode root, File file) {
-        if (root.getUserObject().equals(file)) {
+    private FileTreeNode findNode(FileTreeNode root, File file) {
+        if (root.getFile().equals(file)) {
             return root;
         }
         for (int i = 0; i < root.getChildCount(); i++) {
-            DefaultMutableTreeNode child = (DefaultMutableTreeNode) root.getChildAt(i);
-            DefaultMutableTreeNode result = findNode(child, file);
+            FileTreeNode child = (FileTreeNode) root.getChildAt(i);
+            FileTreeNode result = findNode(child, file);
             if (result != null) {
                 return result;
             }
@@ -51,11 +50,12 @@ public class FileTree extends JTree {
     }
 
     public void updateNodeText(File file) {
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) fileTreeModel.getRoot();
-        DefaultMutableTreeNode nodeToUpdate = findNode(root, file);
+        FileTreeNode root = (FileTreeNode) fileTreeModel.getRoot();
+        FileTreeNode nodeToUpdate = findNode(root, file);
         if (nodeToUpdate != null) {
-            nodeToUpdate.setUserObject(file);
+            nodeToUpdate.setFile(file);
             fileTreeModel.nodeChanged(nodeToUpdate);
+            repaint();
         }
     }
 

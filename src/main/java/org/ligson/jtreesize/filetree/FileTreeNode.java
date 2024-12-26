@@ -2,17 +2,18 @@ package org.ligson.jtreesize.filetree;
 
 import lombok.Getter;
 
+import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.io.File;
 import java.util.*;
 
-public class FileTreeNode implements TreeNode {
+public class FileTreeNode implements MutableTreeNode {
 
     @Getter
-    private final File file;
+    private File file;
     private boolean childLoaded = false;
     @Getter
-    private final long fileSize;
+    private long fileSize;
     private final List<FileTreeNode> childNodes = new ArrayList<>();
     private final FileInfoData fileInfoData;
 
@@ -81,5 +82,43 @@ public class FileTreeNode implements TreeNode {
         if (o == null || getClass() != o.getClass()) return false;
         FileTreeNode that = (FileTreeNode) o;
         return file.equals(that.file);
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+        this.fileSize = fileInfoData.getFileSize(file);
+    }
+
+    @Override
+    public void insert(MutableTreeNode child, int index) {
+        childNodes.set(index, (FileTreeNode) child);
+    }
+
+    @Override
+    public void remove(int index) {
+        childNodes.remove(index);
+    }
+
+    @Override
+    public void remove(MutableTreeNode node) {
+        childNodes.remove((FileTreeNode) node);
+    }
+
+    @Override
+    public void setUserObject(Object object) {
+        setFile((File) object);
+    }
+
+    @Override
+    public void removeFromParent() {
+        FileTreeNode parent = (FileTreeNode) getParent();
+        if (parent != null) {
+            parent.remove(this);
+        }
+    }
+
+    @Override
+    public void setParent(MutableTreeNode newParent) {
+        throw new UnsupportedOperationException();
     }
 }

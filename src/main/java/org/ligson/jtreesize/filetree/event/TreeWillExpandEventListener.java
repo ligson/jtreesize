@@ -22,6 +22,6 @@ public class TreeWillExpandEventListener implements EventListener<TreeWillExpand
     public void onEvent(TreeWillExpandEvent event) {
         FileTreeNode fileTreeNode = event.getFileTreeNode();
         DefaultTreeModel defaultTreeModel = (DefaultTreeModel) fileTree.getModel();
-        fileTreeNode.loadChild(defaultTreeModel, fileInfoData);
+        //fileTreeNode.loadChild(defaultTreeModel, fileInfoData);
     }
 }

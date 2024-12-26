@@ -6,10 +6,10 @@ import org.ligson.jtreesize.core.annotation.Component;
 import org.ligson.jtreesize.event.StatusBarChangeEvent;
 import org.ligson.jtreesize.filetree.FileInfoData;
 import org.ligson.jtreesize.filetree.FileTree;
+import org.ligson.jtreesize.filetree.FileTreeModel;
 import org.ligson.jtreesize.filetree.FileTreeNode;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultTreeModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -48,8 +48,9 @@ public class SelectDirBtnActionListener implements ActionListener {
         StatusBarChangeEvent statusBarChangeEvent1 = new StatusBarChangeEvent(this, "计算完成");
         applicationContext.publishEvent(statusBarChangeEvent1);
 
-        DefaultTreeModel defaultTreeModel = (DefaultTreeModel) fileTree.getModel();
-        defaultTreeModel.setRoot(new FileTreeNode(rootDir,fileInfoData));
+        FileTreeModel defaultTreeModel = (FileTreeModel) fileTree.getModel();
+        FileTreeNode rootTreeNode = new FileTreeNode(rootDir, fileInfoData);
+        defaultTreeModel.setRoot(rootTreeNode);
         defaultTreeModel.reload();
     }
 

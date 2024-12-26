@@ -44,7 +44,10 @@ public class FileInfoData {
         StatusBarChangeEvent statusBarChangeEvent1 = new StatusBarChangeEvent(this, "正在计算目录大小....");
         applicationContext.publishEvent(statusBarChangeEvent1);
         calcDirSize(file);
-        FileSizeRefreshEvent fileSizeRefreshEvent = new FileSizeRefreshEvent(this, getAllParentDirectories(file));
+        List<File> files = new ArrayList<>();
+        files.add(file);
+        files.addAll(getAllParentDirectories(file));
+        FileSizeRefreshEvent fileSizeRefreshEvent = new FileSizeRefreshEvent(this, files);
         applicationContext.publishEvent(fileSizeRefreshEvent);
         StatusBarChangeEvent statusBarChangeEvent2 = new StatusBarChangeEvent(this, "计算大小完成");
         applicationContext.publishEvent(statusBarChangeEvent2);
