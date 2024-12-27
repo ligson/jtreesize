@@ -1,3 +1,12 @@
+## 【1.5】(https://github.com/ligson/jtreesize) (2024-12-27)
+
+### Bug Fixes
+
+### Features
+
+1. **feat**: 增加arm和x86架构的支持的安装包
+
+
 ## [1.4](https://github.com/ligson/jtreesize) (2024-12-27)
 
 ### Bug Fixes

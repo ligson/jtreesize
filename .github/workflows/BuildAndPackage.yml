@@ -18,8 +18,10 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]  # 在三个平台上运行
+        os: [ubuntu-latest, windows-latest, macos-latest]  # 在三个平台上运行
+        architecture: [x64, arm64]  # 支持 x86 和 ARM 架构
     runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
 
     steps:
       - name: Checkout Code
@@ -31,6 +33,7 @@ jobs:
           distribution: "temurin"  # 使用 Eclipse Temurin 发行版
           java-version: "21"
           cache: "maven"
+          architecture: ${{ matrix.architecture }}
 
       - name: Extract Version from POM (Windows)
         if: runner.os == 'Windows'
@@ -75,7 +78,7 @@ jobs:
             --win-dir-chooser `
             --win-shortcut `
             --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-${{ matrix.architecture }}.exe
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage (macOS)
@@ -90,7 +93,7 @@ jobs:
             --resource-dir conf \
             --icon conf/treesize.icns \
             --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-${{ matrix.architecture }}.dmg
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage (Linux)
@@ -108,10 +111,10 @@ jobs:
             --dest ../../app-image
 
           # 压缩 app-image 目录为 tar.gz
-          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
+          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
 
           # 移动压缩包到 dist 目录
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz ../../dist/
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz ../../dist/
         working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: List dist directory (Unix)
@@ -125,7 +128,7 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}
+          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/
 
       - name: Create Release
@@ -136,9 +139,11 @@ jobs:
           name: ${{ env.VERSION }}
           body_path: CHANGELOG.md
           files: |
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows.exe
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS.dmg
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-x64.exe
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-arm64.exe
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-x64.dmg
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-arm64.dmg
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-x64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-arm64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
