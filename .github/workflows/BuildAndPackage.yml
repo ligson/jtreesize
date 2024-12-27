@@ -156,6 +156,12 @@ jobs:
           git add CHANGELOG.md
           git commit -m "chore: update changelog with bugfix [skip ci]" || echo "No changes to commit"
 
+      - name: Push Changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main  # 替换为你的目标分支
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
