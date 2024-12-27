@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 获取所有历史记录
 
       - name: Check Runner Architecture
         run: |
@@ -156,11 +158,15 @@ jobs:
           git add CHANGELOG.md
           git commit -m "chore: update changelog with bugfix [skip ci]" || echo "No changes to commit"
 
+      - name: Pull Latest Changes
+        run: |
+          git pull --rebase origin main
+
       - name: Push Changes
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main  # 替换为你的目标分支
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin main
 
       - name: Create Release
         id: create_release
