@@ -18,8 +18,8 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]  # 在三个平台上运行
-        architecture: [x64, aarch64]  # 支持 x86 和 ARM 架构
+        os: [ ubuntu-latest, windows-latest, macos-latest ]  # 在三个平台上运行
+        architecture: [ x64, aarch64 ]  # 支持 x86 和 ARM 架构
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
 
@@ -37,7 +37,6 @@ jobs:
           distribution: "temurin"  # 使用 Eclipse Temurin 发行版
           java-version: "21"
           cache: "maven"
-          architecture: ${{ matrix.architecture }}
 
       - name: Extract Version from POM (Windows)
         if: runner.os == 'Windows'
