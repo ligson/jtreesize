@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 public class SelectDirBtnActionListener implements ActionListener {
@@ -37,7 +38,7 @@ public class SelectDirBtnActionListener implements ActionListener {
         jFileChooser.showOpenDialog(null);
         rootDir = jFileChooser.getSelectedFile();
         if (rootDir != null) {
-            reload();
+            CompletableFuture.runAsync(this::reload);
         }
     }
 
