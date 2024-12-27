@@ -146,6 +146,9 @@ jobs:
 
       - name: Generate Changelog with Bugfix Only
         run: |
+          git config --global user.email "your_email@example.com"
+          git config --global user.name "Your Name"
+          
           npm install -g conventional-changelog-cli
 
           conventional-changelog -p angular -i CHANGELOG.md -s --commit-filter 'return commit.type === "bugfix";'
