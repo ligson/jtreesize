@@ -37,6 +37,7 @@ jobs:
           distribution: "temurin"  # 使用 Eclipse Temurin 发行版
           java-version: "21"
           cache: "maven"
+          architecture: ${{ matrix.architecture }}
 
       - name: Extract Version from POM (Windows)
         if: runner.os == 'Windows'
@@ -143,10 +144,10 @@ jobs:
           body_path: CHANGELOG.md
           files: |
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-x64.exe
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-arm64.exe
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-aarch64.exe
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-x64.dmg
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-arm64.dmg
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-aarch64.dmg
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-x64.tar.gz
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-arm64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-aarch64.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
