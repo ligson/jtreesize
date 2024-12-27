@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]  # 在三个平台上运行
-        architecture: [x64, arm64]  # 支持 x86 和 ARM 架构
+        architecture: [x64, aarch64]  # 支持 x86 和 ARM 架构
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
 
