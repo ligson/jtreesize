@@ -45,7 +45,7 @@ jobs:
       - name: Set up JDK 21 and Maven Cache
         uses: actions/setup-java@v3
         with:
-          distribution: "temurin"  # 使用 Eclipse Temurin 发行版
+          distribution: "temurin"  # 使用 Eclipse Temurin ��行版
           java-version: "21"
           cache: "maven"
           jvmArchitecture: ${{ matrix.architecture }}
@@ -153,7 +153,7 @@ jobs:
           
           npm install -g conventional-changelog-cli
 
-          conventional-changelog -p angular -i CHANGELOG.md -s --commit-filter 'return commit.type === "bugfix";'
+          conventional-changelog -p angular -i CHANGELOG.md -s --commit-filter 'return commit.type === "fix";'
 
           git add CHANGELOG.md
           git commit -m "chore: update changelog with bugfix [skip ci]" || echo "No changes to commit"
