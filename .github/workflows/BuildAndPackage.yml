@@ -46,7 +46,7 @@ jobs:
         if: runner.os != 'Windows'
         id: get-version-linux-macos
         run: |
-          version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          version=$(mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
           version=$(echo $version | xargs)  # 去除前后空格
           echo "VERSION=$version" >> $GITHUB_ENV
 
