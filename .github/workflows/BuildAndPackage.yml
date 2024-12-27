@@ -144,6 +144,15 @@ jobs:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/
 
+      - name: Generate Changelog with Bugfix Only
+        run: |
+          npm install -g conventional-changelog-cli
+
+          conventional-changelog -p angular -i CHANGELOG.md -s --commit-filter 'return commit.type === "bugfix";'
+
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog with bugfix [skip ci]" || echo "No changes to commit"
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
