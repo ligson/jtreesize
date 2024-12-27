@@ -18,8 +18,17 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]  # 在三个平台上运行
-        architecture: [ x64, aarch64 ]  # 支持 x86 和 ARM 架构
+        include:
+          - os: windows-latest
+            architecture: x64
+          - os: ubuntu-latest
+            architecture: x64
+          - os: ubuntu-latest
+            architecture: aarch64
+          - os: macos-latest
+            architecture: x64
+          - os: macos-latest
+            architecture: aarch64
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
 
@@ -144,10 +153,9 @@ jobs:
           body_path: CHANGELOG.md
           files: |
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-x64.exe
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-aarch64.exe
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-x64.dmg
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-aarch64.dmg
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-x64.tar.gz
             dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-aarch64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-x64.dmg
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-aarch64.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
