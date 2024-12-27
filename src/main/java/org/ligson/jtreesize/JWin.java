@@ -2,6 +2,7 @@ package org.ligson.jtreesize;
 
 import org.ligson.jtreesize.core.annotation.Component;
 import org.ligson.jtreesize.core.annotation.PreConstructor;
+import org.ligson.jtreesize.core.annotation.Qualifier;
 import org.ligson.jtreesize.filetree.FileTree;
 
 import javax.swing.*;

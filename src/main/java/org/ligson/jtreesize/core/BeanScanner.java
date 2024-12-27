@@ -47,7 +47,28 @@ public class BeanScanner {
         if (interfaces.length > 0) {
             beanDefinition.setInterfaceClass(interfaces[0]);
         }
+
+        // Set the bean name
+        String beanName = getBeanName(clazz);
+        beanDefinition.setName(beanName);
+
         return beanDefinition;
+    }
+
+    private static String getBeanName(Class<?> clazz) {
+        if (clazz.isAnnotationPresent(Component.class)) {
+            Component component = clazz.getAnnotation(Component.class);
+            return component.name().isEmpty() ? getDefaultBeanName(clazz) : component.name();
+        } else if (clazz.isAnnotationPresent(Service.class)) {
+            Service service = clazz.getAnnotation(Service.class);
+            return service.name().isEmpty() ? getDefaultBeanName(clazz) : service.name();
+        }
+        return getDefaultBeanName(clazz);
+    }
+
+    private static String getDefaultBeanName(Class<?> clazz) {
+        String simpleName = clazz.getSimpleName();
+        return Character.toLowerCase(simpleName.charAt(0)) + simpleName.substring(1);
     }
 
     public void scanEventListeners(String[] basePackages, EventRegister eventRegister) throws Exception {

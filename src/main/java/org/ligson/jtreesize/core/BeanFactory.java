@@ -1,3 +1,4 @@
+// src/main/java/org/ligson/jtreesize/core/BeanFactory.java
 package org.ligson.jtreesize.core;
 
 import org.ligson.jtreesize.core.annotation.*;
@@ -18,12 +19,17 @@ public class BeanFactory {
     }
 
     public Object createBean(Class<?> clazz) throws Exception {
-        // Initialize dependencies first
         Constructor<?> constructor = clazz.getConstructors()[0];
         Class<?>[] parameterTypes = constructor.getParameterTypes();
+        Annotation[][] parameterAnnotations = constructor.getParameterAnnotations();
         Object[] parameters = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
-            parameters[i] = context.getBean(parameterTypes[i]);
+            Qualifier qualifier = getQualifier(parameterAnnotations[i]);
+            if (qualifier != null) {
+                parameters[i] = context.getBean(parameterTypes[i], qualifier.value());
+            } else {
+                parameters[i] = context.getBean(parameterTypes[i]);
+            }
         }
 
         Object bean = constructor.newInstance(parameters);
@@ -38,23 +44,25 @@ public class BeanFactory {
         for (Field field : bean.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(Autowired.class)) {
                 field.setAccessible(true);
-                Object dependency = context.getBean(field.getType());
+                Qualifier qualifier = field.getAnnotation(Qualifier.class);
+                Object dependency;
+                if (qualifier != null) {
+                    dependency = context.getBean(field.getType(), qualifier.value());
+                } else {
+                    dependency = context.getBean(field.getType());
+                }
                 field.set(bean, dependency);
             }
         }
     }
 
-    public void destroyBean(Object bean) throws Exception {
-        invokeAnnotatedMethods(bean, PreDestroy.class);
-    }
-
-    private void invokeAnnotatedMethods(Object bean, Class<?> annotation) throws Exception {
-        for (Method method : bean.getClass().getDeclaredMethods()) {
-            if (method.isAnnotationPresent((Class<? extends Annotation>) annotation)) {
-                method.setAccessible(true);
-                method.invoke(bean);
+    private Qualifier getQualifier(Annotation[] annotations) {
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof Qualifier) {
+                return (Qualifier) annotation;
             }
         }
+        return null;
     }
 
     private String getBeanName(Class<?> clazz) {
@@ -75,5 +83,18 @@ public class BeanFactory {
 
     public Object getBeanByName(String name) {
         return namedBeans.get(name);
+    }
+
+    public void destroyBean(Object bean) throws Exception {
+        invokeAnnotatedMethods(bean, PreDestroy.class);
+    }
+
+    private void invokeAnnotatedMethods(Object bean, Class<? extends Annotation> annotation) throws Exception {
+        for (Method method : bean.getClass().getDeclaredMethods()) {
+            if (method.isAnnotationPresent(annotation)) {
+                method.setAccessible(true);
+                method.invoke(bean);
+            }
+        }
     }
 }

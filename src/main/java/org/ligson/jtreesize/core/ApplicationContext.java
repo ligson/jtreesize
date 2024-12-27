@@ -9,6 +9,7 @@ import org.ligson.jtreesize.core.exception.CircularDependencyException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ApplicationContext {
     private final Map<Class<?>, BeanDefinition> beans;
@@ -29,8 +30,12 @@ public class ApplicationContext {
         BeanScanner beanScanner = new BeanScanner(this);
         beans = beanScanner.scanComponents(basePackages);
         beans.put(ApplicationContext.class, createApplicationContextBeanDefinition());
+
+
         BeanLifecycleManager lifecycleManager = new BeanLifecycleManager(this);
         lifecycleManager.initializeBeans(beans);
+
+
 
         // Initialize EventPublisher
         EventRegister eventRegister = new EventRegister();
@@ -47,6 +52,8 @@ public class ApplicationContext {
         }));
     }
 
+
+
     private BeanDefinition createApplicationContextBeanDefinition() {
         BeanDefinition beanDefinition = new BeanDefinition();
         beanDefinition.setBeanClass(ApplicationContext.class);
@@ -55,6 +62,20 @@ public class ApplicationContext {
     }
 
     public <T> T getBean(Class<T> clazz) throws Exception {
+        if (clazz.isInterface()) {
+            Set<BeanDefinition> implementations = beans.values().stream()
+                    .filter(beanDefinition -> clazz.isAssignableFrom(beanDefinition.getBeanClass()))
+                    .collect(Collectors.toSet());
+
+            if (implementations.size() == 1) {
+                return clazz.cast(implementations.iterator().next().getInstance());
+            } else if (implementations.size() > 1) {
+                throw new RuntimeException("Multiple implementations found for interface: " + clazz);
+            } else {
+                throw new RuntimeException("No implementation found for interface: " + clazz);
+            }
+        }
+
         BeanDefinition beanDefinition = beans.get(clazz);
         if (beanDefinition == null) {
             throw new RuntimeException("No bean found for class: " + clazz);
@@ -77,13 +98,18 @@ public class ApplicationContext {
         return clazz.cast(beanDefinition.getInstance());
     }
 
-    public Object getBean(String name) {
-        for (BeanDefinition beanDefinition : beans.values()) {
-            if (beanDefinition.getName().equals(name)) {
-                return beanDefinition.getInstance();
+    public <T> T getBean(Class<T> clazz, String qualifier) throws Exception {
+        Set<BeanDefinition> implementations = beans.values().stream()
+                .filter(beanDefinition -> clazz.isAssignableFrom(beanDefinition.getBeanClass()))
+                .collect(Collectors.toSet());
+
+        for (BeanDefinition beanDefinition : implementations) {
+            if (beanDefinition.getName().equals(qualifier)) {
+                return clazz.cast(beanDefinition.getInstance());
             }
         }
-        return null;
+
+        throw new RuntimeException("No bean found for class: " + clazz + " with qualifier: " + qualifier);
     }
 
     public void publishEvent(Event event) {
