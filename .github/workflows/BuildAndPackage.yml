@@ -24,8 +24,7 @@ jobs:
           java-version: '17'
 
 
-      - name: Build using Maven
-        run: mvn -B clean package
+
 
       - name: Update and push CHANGELOG
         run: |
