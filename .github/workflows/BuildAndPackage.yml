@@ -201,10 +201,41 @@ jobs:
           name: changelog
           path: .
       
-      - name: Download Build Artifacts
+      # 明确下载每个工件
+      - name: Download Windows x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-*
+          name: jtreesize-${{ needs.build-and-package.outputs.version }}-windows-latest-x64
+          path: dist/
+
+      - name: Download Windows aarch64 Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jtreesize-${{ needs.build-and-package.outputs.version }}-windows-latest-aarch64
+          path: dist/
+      
+      - name: Download Ubuntu x64 Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jtreesize-${{ needs.build-and-package.outputs.version }}-ubuntu-latest-x64
+          path: dist/
+
+      - name: Download Ubuntu aarch64 Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jtreesize-${{ needs.build-and-package.outputs.version }}-ubuntu-latest-aarch64
+          path: dist/
+      
+      - name: Download macOS x64 Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jtreesize-${{ needs.build-and-package.outputs.version }}-macos-latest-x64
+          path: dist/
+
+      - name: Download macOS aarch64 Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: jtreesize-${{ needs.build-and-package.outputs.version }}-macos-latest-aarch64
           path: dist/
       
       - name: Create Release
@@ -214,10 +245,10 @@ jobs:
           name: ${{ needs.build-and-package.outputs.version }}
           body_path: CHANGELOG.md
           files: |
-            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-Windows-x64.exe
-            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-Linux-x64.tar.gz
-            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-Linux-aarch64.tar.gz
-            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-macOS-x64.dmg
-            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-macOS-aarch64.dmg
+            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-Windows-x64.exe
+            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-Linux-x64.tar.gz
+            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-Linux-aarch64.tar.gz
+            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-macOS-x64.dmg
+            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-macOS-aarch64.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
