@@ -43,7 +43,7 @@ jobs:
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           # 先还原对 .github/workflows/xxx.yml 的任何修改，防止它被提交
-          git restore .github/workflows/xxx.yml
+          git restore .github/workflows/BuildAndPackage.yml
           
           # 只将 CHANGELOG.md 添加到提交
           git add CHANGELOG.md
