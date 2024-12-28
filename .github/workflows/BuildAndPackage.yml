@@ -1,21 +1,24 @@
 name: Generate Changelog
 
+permissions:
+  contents: write
+  workflows: write  # 增加 workflows 权限
+
 on:
   push:
     # 只在 Tag 名称是数字.数字 (例如: 1.6, 1.7, 2.0 等) 或数字.数字.数字 时触发工作流
     tags:
       - '[0-9]*.[0-9]*'
       - '[0-9]*.[0-9]*.[0-9]*'
-permissions:
-  contents: write
-  workflows: write  # 增加 workflows 权限
-  
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
     
     permissions:
-      contents: write  # 必须要有 write 权限，才能推送到仓库
+      contents: write
+      workflows: write  # 确保在 job 级别也包含 workflows 权限
 
     steps:
       - name: Check out code
