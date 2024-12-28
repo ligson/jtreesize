@@ -32,8 +32,8 @@ jobs:
             architecture: aarch64
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
-    outputs:
-      version: ${{ steps.set-version.outputs.version }}
+    env:
+      VERSION: ${{ github.ref_name }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -52,37 +52,8 @@ jobs:
           cache: "maven"
           jvmArchitecture: ${{ matrix.architecture }}
 
-      - name: Extract Version from POM (Windows)
-        if: runner.os == 'Windows'
-        id: get-version-windows
-        shell: pwsh
-        run: |
-          $version = (mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
-          Write-Output "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Output "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
-
-      - name: Extract Version from POM (Linux and macOS)
-        if: runner.os != 'Windows'
-        id: get-version-linux-macos
-        run: |
-          version=$(mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
-          version=$(echo $version | xargs)  # 去除前后空格
-          echo "VERSION=$version" >> $GITHUB_ENV
-          echo "version=$version" >> $GITHUB_OUTPUT
-
-      - name: Set Job Output Version for Windows
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          echo "version=${{ steps.get-version-windows.outputs.version }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
-
-      - name: Set Job Output Version for Linux and macOS
-        if: runner.os != 'Windows'
-        run: |
-          echo "version=${{ steps.get-version-linux-macos.outputs.version }}" >> $GITHUB_OUTPUT
-
       - name: Verify VERSION
-        run: echo "Extracted VERSION is ${{ steps.set-version.outputs.version }}"
+        run: echo "Extracted VERSION is ${{ env.VERSION }}"
 
       - name: Build with Maven
         run: mvn clean package '-Dmaven.test.skip=true'
@@ -92,7 +63,7 @@ jobs:
 
       - name: Extract Packaged Archive
         run: |
-          tar -zxvf target/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-${{ env.PKG_NAME }}.tar.gz -C target/
+          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/
 
       - name: Install WiX
         if: runner.os == 'Windows'
@@ -104,16 +75,16 @@ jobs:
           jpackage `
             --input . `
             --name ${{ env.PKG_NAME }} `
-            --main-jar lib/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.jar `
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar `
             --main-class ${{ env.MAIN_CLASS }} `
             --type exe `
             --resource-dir conf `
             --icon conf/treesize.ico `
             --win-dir-chooser `
             --win-shortcut `
-            --app-version ${{ steps.set-version.outputs.version }}
-          Move-Item "${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.exe" "../../dist/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-Windows-${{ matrix.architecture }}.exe"
-        working-directory: target/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}
+            --app-version ${{ env.VERSION }}
+          Move-Item "${{ env.PKG_NAME }}-${{ env.VERSION }}.exe" "../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-${{ matrix.architecture }}.exe"
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage (macOS)
         if: runner.os == 'macOS'
@@ -121,14 +92,14 @@ jobs:
           jpackage \
             --input . \
             --name ${{ env.PKG_NAME }} \
-            --main-jar lib/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.jar \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
             --main-class ${{ env.MAIN_CLASS }} \
             --type dmg \
             --resource-dir conf \
             --icon conf/treesize.icns \
-            --app-version ${{ steps.set-version.outputs.version }}
-          mv ${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-macOS-${{ matrix.architecture }}.dmg
-        working-directory: target/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}
+            --app-version ${{ env.VERSION }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-${{ matrix.architecture }}.dmg
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: Package Application with jpackage (Linux)
         if: runner.os == 'Linux'
@@ -136,20 +107,20 @@ jobs:
           jpackage \
             --input . \
             --name ${{ env.PKG_NAME }} \
-            --main-jar lib/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.jar \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
             --main-class ${{ env.MAIN_CLASS }} \
             --type app-image \
             --resource-dir conf \
             --icon conf/treesize.png \
-            --app-version ${{ steps.set-version.outputs.version }} \
+            --app-version ${{ env.VERSION }} \
             --dest ../../app-image
 
           # 压缩 app-image 目录为 tar.gz
-          tar -czvf ${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-Linux-${{ matrix.architecture }}.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
+          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
 
           # 移动压缩包到 dist 目录
-          mv ${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-Linux-${{ matrix.architecture }}.tar.gz ../../dist/
-        working-directory: target/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz ../../dist/
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
 
       - name: List dist directory (Windows)
         if: runner.os == 'Windows'
@@ -158,7 +129,7 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-${{ matrix.os }}-${{ matrix.architecture }}
+          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/
 
   generate-changelog:
@@ -218,50 +189,50 @@ jobs:
       - name: Download Windows x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ needs.build-and-package.outputs.version }}-windows-latest-x64
+          name: jtreesize-${{ github.ref_name }}-windows-latest-x64
           path: dist/
 
       - name: Download Windows aarch64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ needs.build-and-package.outputs.version }}-windows-latest-aarch64
+          name: jtreesize-${{ github.ref_name }}-windows-latest-aarch64
           path: dist/
       
       - name: Download Ubuntu x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ needs.build-and-package.outputs.version }}-ubuntu-latest-x64
+          name: jtreesize-${{ github.ref_name }}-ubuntu-latest-x64
           path: dist/
 
       - name: Download Ubuntu aarch64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ needs.build-and-package.outputs.version }}-ubuntu-latest-aarch64
+          name: jtreesize-${{ github.ref_name }}-ubuntu-latest-aarch64
           path: dist/
       
       - name: Download macOS x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ needs.build-and-package.outputs.version }}-macos-latest-x64
+          name: jtreesize-${{ github.ref_name }}-macos-latest-x64
           path: dist/
 
       - name: Download macOS aarch64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ needs.build-and-package.outputs.version }}-macos-latest-aarch64
+          name: jtreesize-${{ github.ref_name }}-macos-latest-aarch64
           path: dist/
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ needs.build-and-package.outputs.version }}
-          name: ${{ needs.build-and-package.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body_path: CHANGELOG.md
           files: |
-            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-Windows-x64.exe
-            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-Linux-x64.tar.gz
-            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-Linux-aarch64.tar.gz
-            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-macOS-x64.dmg
-            dist/jtreesize-${{ needs.build-and-package.outputs.version }}-macOS-aarch64.dmg
+            dist/jtreesize-${{ github.ref_name }}-Windows-x64.exe
+            dist/jtreesize-${{ github.ref_name }}-Linux-x64.tar.gz
+            dist/jtreesize-${{ github.ref_name }}-Linux-aarch64.tar.gz
+            dist/jtreesize-${{ github.ref_name }}-macOS-x64.dmg
+            dist/jtreesize-${{ github.ref_name }}-macOS-aarch64.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
