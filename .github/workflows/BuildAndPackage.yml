@@ -148,27 +148,33 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 确保获取完整历史记录
       
       - name: Generate Changelog
         run: |
           # 获取当前日期
           CURRENT_DATE=$(date +"%Y-%m-%d")
           
-          # 获取最新的tag
-          LATEST_TAG=$(git describe --tags --abbrev=0)
+          # 获取所有标签，按创建日期降序排序
+          TAGS=($(git tag --sort=-creatordate))
           
-          # 生成临时changelog文件
-          echo "# $LATEST_TAG ($CURRENT_DATE)" > temp_changelog.md
-          echo "" >> temp_changelog.md
+          LATEST_TAG=${TAGS[0]}
           
-          # 获取上一个tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          if [ ${#TAGS[@]} -ge 2 ]; then
+            PREVIOUS_TAG=${TAGS[1]}
+            # 获取两个标签之间的提交记录
+            git log --pretty=format:"* %s" "$PREVIOUS_TAG..$LATEST_TAG" > temp_changelog.md
+          else
+            # 只有一个标签，获取该标签的所有提交记录
+            git log --pretty=format:"* %s" "$LATEST_TAG" > temp_changelog.md
+          fi
           
-          # 获取两个tag之间的提交记录
-          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> temp_changelog.md
-          
-          # 使用生成的临时文件
-          mv temp_changelog.md CHANGELOG.md
+          # 生成 CHANGELOG.md
+          echo "# $LATEST_TAG ($CURRENT_DATE)" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          cat temp_changelog.md >> CHANGELOG.md
+          rm temp_changelog.md
       
       - name: Upload Changelog
         uses: actions/upload-artifact@v3
@@ -188,13 +194,13 @@ jobs:
         with:
           name: changelog
           path: .
-
+      
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
         with:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-*
           path: dist/
-
+      
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
