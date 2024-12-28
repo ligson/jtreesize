@@ -1,27 +1,150 @@
-name: Generate Changelog
-
-permissions:
-  contents: write
+name: Build and Package Java Application
 
 on:
   push:
-    # 只在 Tag 名称是数字.数字 (例如: 1.6, 1.7, 2.0 等) 或数字.数字.数字 时触发工作流
-    tags:
-      - '[0-9]*.[0-9]*'
-      - '[0-9]*.[0-9]*.[0-9]*'
+    branches:
+      - main  # 触发条件：推送到 main 分支
+
+permissions:
+  contents: write
+  packages: write
+  actions: write
+
+env:
+  PKG_NAME: jtreesize
+  MAIN_CLASS: org.ligson.jtreesize.App
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            architecture: x64
+          - os: ubuntu-latest
+            architecture: x64
+          - os: ubuntu-latest
+            architecture: aarch64
+          - os: macos-latest
+            architecture: x64
+          - os: macos-latest
+            architecture: aarch64
+    runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
 
     steps:
-      - name: Check out code
+      - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # 获取所有历史记录
+
+      - name: Check Runner Architecture
+        run: |
+          echo "Runner architecture: $(uname -m)"
+
+      - name: Set up JDK 21 and Maven Cache
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"  # 使用 Eclipse Temurin ��行版
+          java-version: "21"
+          cache: "maven"
+          jvmArchitecture: ${{ matrix.architecture }}
+
+      - name: Extract Version from POM (Windows)
+        if: runner.os == 'Windows'
+        id: get-version-windows
+        run: |
+          $version = (mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Extract Version from POM (Linux and macOS)
+        if: runner.os != 'Windows'
+        id: get-version-linux-macos
+        run: |
+          version=$(mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
+          version=$(echo $version | xargs)  # 去除前后空格
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Build with Maven
+        run: mvn clean package '-Dmaven.test.skip=true'
+
+      - name: Prepare Output Directory
+        run: mkdir -p dist
+
+      - name: Extract Packaged Archive
+        run: |
+          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/
+
+      - name: Install WiX
+        if: runner.os == 'Windows'
+        run: dotnet tool install --global wix
+
+      - name: Package Application with jpackage (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          jpackage `
+            --input . `
+            --name ${{ env.PKG_NAME }} `
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar `
+            --main-class ${{ env.MAIN_CLASS }} `
+            --type exe `
+            --resource-dir conf `
+            --icon conf/treesize.ico `
+            --win-dir-chooser `
+            --win-shortcut `
+            --app-version ${{ env.VERSION }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-${{ matrix.architecture }}.exe
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: Package Application with jpackage (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          jpackage \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
+            --type dmg \
+            --resource-dir conf \
+            --icon conf/treesize.icns \
+            --app-version ${{ env.VERSION }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-${{ matrix.architecture }}.dmg
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: Package Application with jpackage (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          jpackage \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
+            --type app-image \
+            --resource-dir conf \
+            --icon conf/treesize.png \
+            --app-version ${{ env.VERSION }} \
+            --dest ../../app-image
+
+          # 压缩 app-image 目录为 tar.gz
+          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
+
+          # 移动压缩包到 dist 目录
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz ../../dist/
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: List dist directory (Unix)
+        if: runner.os != 'Windows'
+        run: ls -la dist/
+
+      - name: List dist directory (Windows)
+        if: runner.os == 'Windows'
+        run: Get-ChildItem dist
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
+          path: dist/
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -58,3 +181,14 @@ jobs:
           body_path: CHANGELOG.md
           draft: false
           prerelease: false
+        run: |
+          git config --global user.email "your_email@example.com"
+          git config --global user.name "Your Name"
+          
+          npm install -g conventional-changelog-cli
+
+          conventional-changelog -p angular -i CHANGELOG.md -s --commit-filter 'return commit.type === "fix";'
+
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog with bugfix [skip ci]" || echo "No changes to commit"
+
