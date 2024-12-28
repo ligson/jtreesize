@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v3
@@ -31,7 +33,7 @@ jobs:
         run: |
           # 如果你本地已有 CHANGELOG.md，可以先保留它
           # 后续再次生成时会自动追加，不会覆盖原有内容
-          conventional-changelog -p angular -i CHANGELOG.md -s
+          conventional-changelog -p angular -i CHANGELOG.md -s -r 0
 
       - name: Commit and push changes
         run: |
