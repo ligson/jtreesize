@@ -1,24 +1,72 @@
-name: Build and Package Java Application
-
-on:
-  push:
-    # 只有当推送 Tag 满足以下正则时，才会执行本工作流
-    tags:
-      - '[0-9]*.[0-9]*'
-      - '[0-9]*.[0-9]*.[0-9]*'
+name: CI Workflow
 
 permissions:
   contents: write
   packages: write
   actions: write
 
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*'
+      - '[0-9]*.[0-9]*.[0-9]*'
+    branches:
+      - main
+
 env:
   PKG_NAME: jtreesize
   MAIN_CLASS: org.ligson.jtreesize.App
 
 jobs:
-  build:
-    name: Build (Multi-OS)
+  generate-changelog:
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Conventional Changelog CLI
+        run: npm install -g conventional-changelog-cli
+
+      - name: Generate Changelog
+        run: |
+          # 获取当前日期
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          
+          # 获取最新的tag
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          
+          # 生成临时changelog文件
+          echo "# $LATEST_TAG ($CURRENT_DATE)" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          
+          # 获取上一个tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          
+          # 获取两个tag之间的提交记录
+          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> temp_changelog.md
+          
+          # 使用生成的临时文件
+          mv temp_changelog.md CHANGELOG.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+
+  build-and-package:
+    if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
         include:
@@ -32,9 +80,8 @@ jobs:
             architecture: x64
           - os: macos-latest
             architecture: aarch64
-
     runs-on: ${{ matrix.os }}
-
+    name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -45,55 +92,118 @@ jobs:
         run: |
           echo "Runner architecture: $(uname -m)"
 
-      - name: Set up JDK
+      - name: Set up JDK 21 and Maven Cache
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"  # 使用 Eclipse Temurin 发行版
+          java-version: "21"
+          cache: "maven"
+          jvmArchitecture: ${{ matrix.architecture }}
 
-      - name: Build and Package
+      - name: Extract Version from POM (Windows)
+        if: runner.os == 'Windows'
+        id: get-version-windows
         run: |
-          # 假设使用 Maven
-          mvn clean package -DskipTests
+          $version = (mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Upload Artifact
+      - name: Extract Version from POM (Linux and macOS)
+        if: runner.os != 'Windows'
+        id: get-version-linux-macos
+        run: |
+          version=$(mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
+          version=$(echo $version | xargs)  # 去除前后空格
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Build with Maven
+        run: mvn clean package '-Dmaven.test.skip=true'
+
+      - name: Prepare Output Directory
+        run: mkdir -p dist
+
+      - name: Extract Packaged Archive
+        run: |
+          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/
+
+      - name: Install WiX
+        if: runner.os == 'Windows'
+        run: dotnet tool install --global wix
+
+      - name: Package Application with jpackage (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          jpackage `
+            --input . `
+            --name ${{ env.PKG_NAME }} `
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar `
+            --main-class ${{ env.MAIN_CLASS }} `
+            --type exe `
+            --resource-dir conf `
+            --icon conf/treesize.ico `
+            --win-dir-chooser `
+            --win-shortcut `
+            --app-version ${{ env.VERSION }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-${{ matrix.architecture }}.exe
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: Package Application with jpackage (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          jpackage \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
+            --type dmg \
+            --resource-dir conf \
+            --icon conf/treesize.icns \
+            --app-version ${{ env.VERSION }}
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-${{ matrix.architecture }}.dmg
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: Package Application with jpackage (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          jpackage \
+            --input . \
+            --name ${{ env.PKG_NAME }} \
+            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
+            --main-class ${{ env.MAIN_CLASS }} \
+            --type app-image \
+            --resource-dir conf \
+            --icon conf/treesize.png \
+            --app-version ${{ env.VERSION }} \
+            --dest ../../app-image
+
+          # 压缩 app-image 目录为 tar.gz
+          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
+
+          # 移动压缩包到 dist 目录
+          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz ../../dist/
+        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
+
+      - name: List dist directory (Windows)
+        if: runner.os == 'Windows'
+        run: Get-ChildItem dist
+
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: build-${{ matrix.os }}-${{ matrix.architecture }}
-          path: target/*.jar
-
-  changelog:
-    name: Generate Changelog and Release
-    # 只有当 build Job 完成后才执行此 Job
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Generate Changelog
-        run: |
-          CURRENT_DATE=$(date +"%Y-%m-%d")
-          
-          # 获取最新 Tag
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          echo "# $LATEST_TAG ($CURRENT_DATE)" > CHANGELOG.md
-          echo "" >> CHANGELOG.md
-          
-          # 获取上一个 Tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          
-          # 获取 $PREVIOUS_TAG..$LATEST_TAG 的提交记录，写入 CHANGELOG.md
-          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> CHANGELOG.md
+          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
+          path: dist/
 
       - name: Create Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ env.VERSION }}
+          name: ${{ env.VERSION }}
           body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
+          files: |
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-x64.exe
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-x64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-aarch64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-x64.dmg
+            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-aarch64.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
