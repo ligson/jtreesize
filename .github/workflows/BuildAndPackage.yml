@@ -32,6 +32,8 @@ jobs:
             architecture: aarch64
     runs-on: ${{ matrix.os }}
     name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
+    outputs:
+      version: ${{ steps.get-version-linux-macos.outputs.version }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -64,6 +66,10 @@ jobs:
           version=$(mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
           version=$(echo $version | xargs)  # 去除前后空格
           echo "VERSION=$version" >> $GITHUB_ENV
+          echo "::set-output name=version::$version"
+      
+      - name: Verify VERSION
+        run: echo "Extracted VERSION is ${{ steps.get-version-linux-macos.outputs.version }}"
 
       - name: Build with Maven
         run: mvn clean package '-Dmaven.test.skip=true'
@@ -139,7 +145,7 @@ jobs:
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
+          name: ${{ env.PKG_NAME }}-${{ steps.get-version-linux-macos.outputs.version }}-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/
   
   generate-changelog:
@@ -198,20 +204,20 @@ jobs:
       - name: Download Build Artifacts
         uses: actions/download-artifact@v3
         with:
-          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-*
+          name: ${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-*
           path: dist/
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.VERSION }}
-          name: ${{ env.VERSION }}
+          tag_name: ${{ needs.build-and-package.outputs.version }}
+          name: ${{ needs.build-and-package.outputs.version }}
           body_path: CHANGELOG.md
           files: |
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-x64.exe
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-x64.tar.gz
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-aarch64.tar.gz
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-x64.dmg
-            dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-aarch64.dmg
+            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-Windows-x64.exe
+            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-Linux-x64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-Linux-aarch64.tar.gz
+            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-macOS-x64.dmg
+            dist/${{ env.PKG_NAME }}-${{ needs.build-and-package.outputs.version }}-macOS-aarch64.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
