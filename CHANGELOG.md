@@ -1,3 +1,12 @@
+#  (2024-12-28)
+
+
+### Features
+
+* 升级到2.0, 实现了新的功能XYZ ([04ebbbc](https://github.com/ligson/jtreesize/commit/04ebbbc92e482ade57c187fbc284468feff61027))
+
+
+
 #  (2024-12-27)
 
 
