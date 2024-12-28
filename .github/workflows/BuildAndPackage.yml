@@ -141,7 +141,14 @@ jobs:
         with:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/
-
+  
+  generate-changelog:
+    runs-on: ubuntu-latest
+    needs: build-and-package
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
       - name: Generate Changelog
         run: |
           # 获取当前日期
@@ -162,9 +169,33 @@ jobs:
           
           # 使用生成的临时文件
           mv temp_changelog.md CHANGELOG.md
+      
+      - name: Upload Changelog
+        uses: actions/upload-artifact@v3
+        with:
+          name: changelog
+          path: CHANGELOG.md
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [build-and-package, generate-changelog]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Download Changelog
+        uses: actions/download-artifact@v3
+        with:
+          name: changelog
+          path: .
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-*
+          path: dist/
 
       - name: Create Release
-        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.VERSION }}
