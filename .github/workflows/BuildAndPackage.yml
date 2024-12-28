@@ -2,8 +2,10 @@ name: Build and Package Java Application
 
 on:
   push:
-    branches:
-      - main  # 触发条件：推送到 main 分支
+    # 只有当推送 Tag 满足以下正则时，才会执行本工作流
+    tags:
+      - '[0-9]*.[0-9]*'
+      - '[0-9]*.[0-9]*.[0-9]*'
 
 permissions:
   contents: write
@@ -16,6 +18,7 @@ env:
 
 jobs:
   build:
+    name: Build (Multi-OS)
     strategy:
       matrix:
         include:
@@ -29,8 +32,8 @@ jobs:
             architecture: x64
           - os: macos-latest
             architecture: aarch64
+
     runs-on: ${{ matrix.os }}
-    name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
 
     steps:
       - name: Checkout Code
@@ -42,138 +45,49 @@ jobs:
         run: |
           echo "Runner architecture: $(uname -m)"
 
-      - name: Set up JDK 21 and Maven Cache
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: "temurin"  # 使用 Eclipse Temurin ��行版
-          java-version: "21"
-          cache: "maven"
-          jvmArchitecture: ${{ matrix.architecture }}
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Extract Version from POM (Windows)
-        if: runner.os == 'Windows'
-        id: get-version-windows
+      - name: Build and Package
         run: |
-          $version = (mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
-          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          # 假设使用 Maven
+          mvn clean package -DskipTests
 
-      - name: Extract Version from POM (Linux and macOS)
-        if: runner.os != 'Windows'
-        id: get-version-linux-macos
-        run: |
-          version=$(mvn help:evaluate '-Dexpression=project.version' -q -DforceStdout)
-          version=$(echo $version | xargs)  # 去除前后空格
-          echo "VERSION=$version" >> $GITHUB_ENV
-
-      - name: Build with Maven
-        run: mvn clean package '-Dmaven.test.skip=true'
-
-      - name: Prepare Output Directory
-        run: mkdir -p dist
-
-      - name: Extract Packaged Archive
-        run: |
-          tar -zxvf target/${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ env.PKG_NAME }}.tar.gz -C target/
-
-      - name: Install WiX
-        if: runner.os == 'Windows'
-        run: dotnet tool install --global wix
-
-      - name: Package Application with jpackage (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          jpackage `
-            --input . `
-            --name ${{ env.PKG_NAME }} `
-            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar `
-            --main-class ${{ env.MAIN_CLASS }} `
-            --type exe `
-            --resource-dir conf `
-            --icon conf/treesize.ico `
-            --win-dir-chooser `
-            --win-shortcut `
-            --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.exe ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-Windows-${{ matrix.architecture }}.exe
-        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
-
-      - name: Package Application with jpackage (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          jpackage \
-            --input . \
-            --name ${{ env.PKG_NAME }} \
-            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
-            --main-class ${{ env.MAIN_CLASS }} \
-            --type dmg \
-            --resource-dir conf \
-            --icon conf/treesize.icns \
-            --app-version ${{ env.VERSION }}
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}.dmg ../../dist/${{ env.PKG_NAME }}-${{ env.VERSION }}-macOS-${{ matrix.architecture }}.dmg
-        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
-
-      - name: Package Application with jpackage (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          jpackage \
-            --input . \
-            --name ${{ env.PKG_NAME }} \
-            --main-jar lib/${{ env.PKG_NAME }}-${{ env.VERSION }}.jar \
-            --main-class ${{ env.MAIN_CLASS }} \
-            --type app-image \
-            --resource-dir conf \
-            --icon conf/treesize.png \
-            --app-version ${{ env.VERSION }} \
-            --dest ../../app-image
-
-          # 压缩 app-image 目录为 tar.gz
-          tar -czvf ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz -C ../../ app-image/${{ env.PKG_NAME }}
-
-          # 移动压缩包到 dist 目录
-          mv ${{ env.PKG_NAME }}-${{ env.VERSION }}-Linux-${{ matrix.architecture }}.tar.gz ../../dist/
-        working-directory: target/${{ env.PKG_NAME }}-${{ env.VERSION }}
-
-      - name: List dist directory (Unix)
-        if: runner.os != 'Windows'
-        run: ls -la dist/
-
-      - name: List dist directory (Windows)
-        if: runner.os == 'Windows'
-        run: Get-ChildItem dist
-
-      - name: Upload Build Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
-          path: dist/
+          name: build-${{ matrix.os }}-${{ matrix.architecture }}
+          path: target/*.jar
 
-      - name: Set up Node
-        uses: actions/setup-node@v3
+  changelog:
+    name: Generate Changelog and Release
+    # 只有当 build Job 完成后才执行此 Job
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
         with:
-          node-version: 16
-
-      - name: Install Conventional Changelog CLI
-        run: npm install -g conventional-changelog-cli
+          fetch-depth: 0
 
       - name: Generate Changelog
         run: |
-          # 获取当前日期
           CURRENT_DATE=$(date +"%Y-%m-%d")
           
-          # 获取最新的tag
+          # 获取最新 Tag
           LATEST_TAG=$(git describe --tags --abbrev=0)
+          echo "# $LATEST_TAG ($CURRENT_DATE)" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
           
-          # 生成临时changelog文件
-          echo "# $LATEST_TAG ($CURRENT_DATE)" > temp_changelog.md
-          echo "" >> temp_changelog.md
-          
-          # 获取上一个tag
+          # 获取上一个 Tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
           
-          # 获取两个tag之间的提交记录
-          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> temp_changelog.md
-          
-          # 使用生成的临时文件
-          mv temp_changelog.md CHANGELOG.md
+          # 获取 $PREVIOUS_TAG..$LATEST_TAG 的提交记录，写入 CHANGELOG.md
+          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> CHANGELOG.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -181,14 +95,5 @@ jobs:
           body_path: CHANGELOG.md
           draft: false
           prerelease: false
-        run: |
-          git config --global user.email "your_email@example.com"
-          git config --global user.name "Your Name"
-          
-          npm install -g conventional-changelog-cli
-
-          conventional-changelog -p angular -i CHANGELOG.md -s --commit-filter 'return commit.type === "fix";'
-
-          git add CHANGELOG.md
-          git commit -m "chore: update changelog with bugfix [skip ci]" || echo "No changes to commit"
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
