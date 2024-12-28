@@ -35,8 +35,8 @@ jobs:
         run: |
           # 确保 CHANGELOG.md 存在
           touch CHANGELOG.md
-          # 使用 conventional-changelog 生成更有结构的变更日志
-          npx conventional-changelog-cli -p angular -i CHANGELOG.md -s -r 2
+          # 只生成最新版本的变更日志，不包含之前所有版本
+          npx conventional-changelog-cli -p angular -i CHANGELOG.md -s -r 0
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
