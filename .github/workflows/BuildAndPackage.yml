@@ -32,15 +32,11 @@ jobs:
         run: npm install -g conventional-changelog-cli
 
       - name: Generate Changelog
-        # 这里采用 angular preset，你也可以使用其他预设，比如 conventionalcommits、atom 等
         run: |
-          # 如果你本地已有 CHANGELOG.md，可以先保留它
-          # 后续再次生成时会自动追加，不会覆盖原有内容
-          conventional-changelog -p angular -i CHANGELOG.md -s -r 0
-
-      - name: Generate Changelog
-        run: |
-          npx conventional-changelog-cli -p angular -i CHANGELOG.md -s -r 0
+          # 确保 CHANGELOG.md 存在
+          touch CHANGELOG.md
+          # 使用 conventional-changelog 生成更有结构的变更日志
+          npx conventional-changelog-cli -p angular -i CHANGELOG.md -s -r 2
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
