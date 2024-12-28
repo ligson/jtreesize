@@ -70,14 +70,16 @@ jobs:
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "version=$version" >> $GITHUB_OUTPUT
 
-      - name: Set Job Output Version
-        id: set-version
+      - name: Set Job Output Version for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            echo "version=${{ steps.get-version-windows.outputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "version=${{ steps.get-version-linux-macos.outputs.version }}" >> $GITHUB_OUTPUT
-          fi
+          echo "version=${{ steps.get-version-windows.outputs.version }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
+
+      - name: Set Job Output Version for Linux and macOS
+        if: runner.os != 'Windows'
+        run: |
+          echo "version=${{ steps.get-version-linux-macos.outputs.version }}" >> $GITHUB_OUTPUT
 
       - name: Verify VERSION
         run: echo "Extracted VERSION is ${{ steps.set-version.outputs.version }}"
@@ -110,7 +112,7 @@ jobs:
             --win-dir-chooser `
             --win-shortcut `
             --app-version ${{ steps.set-version.outputs.version }}
-          mv ${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.exe ../../dist/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-Windows-${{ matrix.architecture }}.exe
+          Move-Item "${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}.exe" "../../dist/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}-Windows-${{ matrix.architecture }}.exe"
         working-directory: target/${{ env.PKG_NAME }}-${{ steps.set-version.outputs.version }}
 
       - name: Package Application with jpackage (macOS)
