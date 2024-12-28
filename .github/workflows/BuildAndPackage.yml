@@ -33,10 +33,24 @@ jobs:
 
       - name: Generate Changelog
         run: |
-          # 确保 CHANGELOG.md 存在
-          touch CHANGELOG.md
-          # 只生成最新版本的变更日志，不包含之前所有版本
-          npx conventional-changelog-cli -p angular -i CHANGELOG.md -s -r 0
+          # 获取当前日期
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          
+          # 获取最新的tag
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          
+          # 生成临时changelog文件
+          echo "# $LATEST_TAG ($CURRENT_DATE)" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          
+          # 获取上一个tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          
+          # 获取两个tag之间的提交记录
+          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> temp_changelog.md
+          
+          # 使用生成的临时文件
+          mv temp_changelog.md CHANGELOG.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
