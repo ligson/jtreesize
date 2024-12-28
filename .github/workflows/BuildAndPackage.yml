@@ -19,7 +19,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # 或者你需要的版本
+          node-version: '18'
 
       - name: Install conventional-changelog-cli
         run: npm install -g conventional-changelog-cli
@@ -29,15 +29,28 @@ jobs:
           # 这里假设你用的是 Angular Preset，可自行根据需求更改
           conventional-changelog -p angular -i CHANGELOG.md -s
           
-          # 这里 -p angular 表示使用 Angular 风格的 Preset
-          # -i 指定要生成或更新的文件
-          # -s 表示在原文件上直接修改（in-place）
-      
       - name: Commit and push CHANGELOG updates
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          
           git add CHANGELOG.md
           git commit -m "chore: update CHANGELOG [skip ci]" || echo "No changes to commit"
           git push origin HEAD:main
+
+      # ====== 新增：创建 Tag 并发布 Release ======
+      - name: Create Git Tag
+        run: |
+          # 这里以 v1.0.0 为例
+          # 你可以在这之前加一些逻辑，比如根据 package.json 的版本自动生成 Tag
+          git tag v1.0.0
+          git push origin v1.0.0
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v1.0.0
+          release_name: "Release v1.0.0"
+          body: |
+            请查看最新的 CHANGELOG.md 了解详情
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
