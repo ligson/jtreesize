@@ -2,7 +2,6 @@ name: Generate Changelog
 
 permissions:
   contents: write
-  workflows: write  # 增加 workflows 权限
 
 on:
   push:
@@ -18,7 +17,6 @@ jobs:
     
     permissions:
       contents: write
-      workflows: write  # 确保在 job 级别也包含 workflows 权限
 
     steps:
       - name: Check out code
