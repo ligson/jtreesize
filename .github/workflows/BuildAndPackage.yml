@@ -16,52 +16,6 @@ env:
   MAIN_CLASS: org.ligson.jtreesize.App
 
 jobs:
-  generate-changelog:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Install Conventional Changelog CLI
-        run: npm install -g conventional-changelog-cli
-
-      - name: Generate Changelog
-        run: |
-          # 获取当前日期
-          CURRENT_DATE=$(date +"%Y-%m-%d")
-          
-          # 获取最新的tag
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          
-          # 生成临时changelog文件
-          echo "# $LATEST_TAG ($CURRENT_DATE)" > temp_changelog.md
-          echo "" >> temp_changelog.md
-          
-          # 获取上一个tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          
-          # 获取两个tag之间的提交记录
-          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> temp_changelog.md
-          
-          # 使用生成的临时文件
-          mv temp_changelog.md CHANGELOG.md
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body_path: CHANGELOG.md
-          draft: false
-          prerelease: false
-
   build-and-package:
     strategy:
       matrix:
@@ -187,6 +141,27 @@ jobs:
         with:
           name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.os }}-${{ matrix.architecture }}
           path: dist/
+
+      - name: Generate Changelog
+        run: |
+          # 获取当前日期
+          CURRENT_DATE=$(date +"%Y-%m-%d")
+          
+          # 获取最新的tag
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          
+          # 生成临时changelog文件
+          echo "# $LATEST_TAG ($CURRENT_DATE)" > temp_changelog.md
+          echo "" >> temp_changelog.md
+          
+          # 获取上一个tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          
+          # 获取两个tag之间的提交记录
+          git log --pretty=format:"* %s" $PREVIOUS_TAG..$LATEST_TAG >> temp_changelog.md
+          
+          # 使用生成的临时文件
+          mv temp_changelog.md CHANGELOG.md
 
       - name: Create Release
         id: create_release
