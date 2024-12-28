@@ -16,41 +16,35 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Node
-        uses: actions/setup-node@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          node-version: '18'
+          java-version: 17
 
-      - name: Install conventional-changelog-cli
-        run: npm install -g conventional-changelog-cli
+      - name: Build using Maven
+        run: mvn -B clean package
 
-      - name: Generate/Update CHANGELOG.md
-        run: |
-          # 这里假设你用的是 Angular Preset，可自行根据需求更改
-          conventional-changelog -p angular -i CHANGELOG.md -s
-          
-      - name: Commit and push CHANGELOG updates
+      - name: Update and push CHANGELOG
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+          # 这里可以执行你的更新 CHANGELOG 逻辑，比如脚本自动更新 CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "chore: update CHANGELOG [skip ci]" || echo "No changes to commit"
           git push origin HEAD:main
 
-      # ====== 新增：创建 Tag 并发布 Release ======
-      - name: Create Git Tag
-        run: |
-          # 这里以 v1.0.0 为例
-          # 你可以在这之前加一些逻辑，比如根据 package.json 的版本自动生成 Tag
-          git tag v1.0.0
-          git push origin v1.0.0
+      - name: Read version from pom.xml
+        id: get_version
+        # 通过 mvn 命令解析 pom.xml 中的 project.version
+        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
-          tag_name: v1.0.0
-          release_name: "Release v1.0.0"
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
           body: |
-            请查看最新的 CHANGELOG.md 了解详情
+            **自动发布**  
+            版本：${{ env.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
