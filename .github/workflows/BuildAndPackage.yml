@@ -38,16 +38,13 @@ jobs:
           # 后续再次生成时会自动追加，不会覆盖原有内容
           conventional-changelog -p angular -i CHANGELOG.md -s -r 0
 
-      - name: Commit and push changes
+      - name: Generate Changelog
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          
-          # 只将 CHANGELOG.md 添加到提交
-          git add CHANGELOG.md
-          
-          # 提交更改
-          git commit -m "chore: update CHANGELOG [skip ci]" || echo "No changes to commit"
-          
-          # 直接推送到当前 tag
-          git push origin HEAD:refs/tags/${{ github.ref_name }}
+          npx conventional-changelog-cli -p angular -i CHANGELOG.md -s -r 0
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
