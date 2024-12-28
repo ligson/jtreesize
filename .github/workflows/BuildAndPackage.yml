@@ -34,6 +34,8 @@ jobs:
     name: Build on ${{ matrix.os }} with ${{ matrix.architecture }}
     env:
       VERSION: ${{ github.ref_name }}
+    outputs:
+      VERSION: ${{ env.VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -135,6 +137,8 @@ jobs:
   generate-changelog:
     runs-on: ubuntu-latest
     needs: build-and-package
+    env:
+      VERSION: ${{ needs.build-and-package.outputs.VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -175,6 +179,8 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     needs: [build-and-package, generate-changelog]
+    env:
+      VERSION: ${{ needs.build-and-package.outputs.VERSION }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -189,37 +195,37 @@ jobs:
       - name: Download Windows x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ github.ref_name }}-windows-latest-x64
+          name: jtreesize-${{ env.VERSION }}-windows-latest-x64
           path: dist/
 
       - name: Download Windows aarch64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ github.ref_name }}-windows-latest-aarch64
+          name: jtreesize-${{ env.VERSION }}-windows-latest-aarch64
           path: dist/
       
       - name: Download Ubuntu x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ github.ref_name }}-ubuntu-latest-x64
+          name: jtreesize-${{ env.VERSION }}-ubuntu-latest-x64
           path: dist/
 
       - name: Download Ubuntu aarch64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ github.ref_name }}-ubuntu-latest-aarch64
+          name: jtreesize-${{ env.VERSION }}-ubuntu-latest-aarch64
           path: dist/
       
       - name: Download macOS x64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ github.ref_name }}-macos-latest-x64
+          name: jtreesize-${{ env.VERSION }}-macos-latest-x64
           path: dist/
 
       - name: Download macOS aarch64 Artifact
         uses: actions/download-artifact@v3
         with:
-          name: jtreesize-${{ github.ref_name }}-macos-latest-aarch64
+          name: jtreesize-${{ env.VERSION }}-macos-latest-aarch64
           path: dist/
       
       - name: Create Release
@@ -229,10 +235,10 @@ jobs:
           name: ${{ github.ref_name }}
           body_path: CHANGELOG.md
           files: |
-            dist/jtreesize-${{ github.ref_name }}-Windows-x64.exe
-            dist/jtreesize-${{ github.ref_name }}-Linux-x64.tar.gz
-            dist/jtreesize-${{ github.ref_name }}-Linux-aarch64.tar.gz
-            dist/jtreesize-${{ github.ref_name }}-macOS-x64.dmg
-            dist/jtreesize-${{ github.ref_name }}-macOS-aarch64.dmg
+            dist/jtreesize-${{ env.VERSION }}-Windows-x64.exe
+            dist/jtreesize-${{ env.VERSION }}-Linux-x64.tar.gz
+            dist/jtreesize-${{ env.VERSION }}-Linux-aarch64.tar.gz
+            dist/jtreesize-${{ env.VERSION }}-macOS-x64.dmg
+            dist/jtreesize-${{ env.VERSION }}-macOS-aarch64.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
