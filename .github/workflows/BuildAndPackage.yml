@@ -2,15 +2,15 @@ name: Generate Changelog
 
 on:
   push:
-    # 只在 Tag 名称是数字.数字 (例如: 1.6, 1.7, 2.0 等) 时触发工作流
+    # 只在 Tag 名称是数字.数字 (例如: 1.6, 1.7, 2.0 等) 或数字.数字.数字 时触发工作流
     tags:
       - '[0-9]*.[0-9]*'
-      - '[0-9]*.[0-9]*.[0-9]*'  # 如果还有可能用到三段式(1.6.1)的版本号，可以加上这条
+      - '[0-9]*.[0-9]*.[0-9]*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     permissions:
       contents: write  # 必须要有 write 权限，才能推送到仓库
 
@@ -27,10 +27,10 @@ jobs:
         run: npm install -g conventional-changelog-cli
 
       - name: Generate Changelog
-        # 这里采用angular预设，你也可以用其他preset
+        # 这里采用 angular preset，你也可以使用其他预设，比如 conventionalcommits、atom 等
         run: |
-          # 如果你本地已经有CHANGELOG.md，可以先保留，后续生成时自动追加
-          # conventional-changelog -p angular -i CHANGELOG.md -s
+          # 如果你本地已有 CHANGELOG.md，可以先保留它
+          # 后续再次生成时会自动追加，不会覆盖原有内容
           conventional-changelog -p angular -i CHANGELOG.md -s
 
       - name: Commit and push changes
