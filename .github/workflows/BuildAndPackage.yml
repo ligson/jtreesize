@@ -8,7 +8,7 @@ on:
 env:
   ACTIONS_RUNNER_DEBUG: true
   ACTIONS_STEP_DEBUG: true
-
+  MAIN_CLASS: org.ligson.jtreesize.App
 permissions:
   contents: write
 
@@ -65,6 +65,7 @@ jobs:
         run: |
           set -x
           jpackage \
+            --main-class ${{ env.MAIN_CLASS }} \
             --name my-app-linux-amd64 \
             --verbose \
             --description "我的 Spring Boot 应用程序 (Linux AMD64)" \
@@ -103,6 +104,7 @@ jobs:
         run: |
           set -x
           jpackage \
+            --main-class ${{ env.MAIN_CLASS }} \
             --name my-app-macos-arm64 \
             --verbose \
             --description "我的 Spring Boot 应用程序 (macOS ARM64)" \
@@ -135,6 +137,7 @@ jobs:
           set -x
           # Start of Selection
           jpackage \
+            --main-class ${{ env.MAIN_CLASS }} \
             --name my-app-windows-arm64 \
             --verbose \
             --description "我的 Spring Boot 应用程序 (Windows ARM64)" \
