@@ -131,6 +131,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Install WiX Toolset (Windows Only)
+        if: runner.os == 'Windows'
+        run: |
+          choco install wix --version=3.11.2
       - name: 使用 jpackage 创建应用程序镜像 (Windows AMD64)
         shell: bash
         run: |
