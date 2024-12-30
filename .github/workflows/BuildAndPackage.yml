@@ -56,10 +56,10 @@ jobs:
         name: 下载 JAR
         with:
           name: app.jar
-      - name: 设置 JDK 17
+      - name: 设置 JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: 使用 jpackage 创建应用程序镜像 (Linux AMD64)
         run: |
@@ -93,10 +93,10 @@ jobs:
         name: 下载 JAR
         with:
           name: app.jar
-      - name: 设置 JDK 17
+      - name: 设置 JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: 'arm64'
       - name: 使用 jpackage 创建应用程序镜像 (macOS ARM64)
@@ -124,10 +124,10 @@ jobs:
         name: 下载 JAR
         with:
           name: app.jar
-      - name: 设置 JDK 17
+      - name: 设置 JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: 使用 jpackage 创建应用程序镜像 (Windows AMD64)
         shell: bash
