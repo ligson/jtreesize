@@ -138,9 +138,9 @@ jobs:
           # Start of Selection
           jpackage \
             --main-class ${{ env.MAIN_CLASS }} \
-            --name my-app-windows-arm64 \
+            --name my-app-windows-amd64 \
             --verbose \
-            --description "我的 Spring Boot 应用程序 (Windows ARM64)" \
+            --description "我的 Spring Boot 应用程序 (Windows AMD64)" \
             --vendor "MyCompany" \
             --input . \
             --main-jar "app.jar" \
